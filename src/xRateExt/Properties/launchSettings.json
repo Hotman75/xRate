@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "xRateExt (Package)": {
+      "commandName": "MsixPackage",
+      "doNotLaunchApp": true
+    },
+    "xRateExt (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

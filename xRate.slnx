@@ -1,0 +1,20 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="src/xRate.App/xRate.App.csproj" Id="98cdb54b-150c-4a63-b1e2-643924eef135">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Deploy />
+  </Project>
+  <Project Path="src/xRate.Core/xRate.Core.csproj" Id="82ddc084-c7a9-41a8-ac2f-63f844d4c0d2">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="src/xRateExt/xRateExt.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Deploy />
+  </Project>
+</Solution>

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "xRate.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "xRate.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
