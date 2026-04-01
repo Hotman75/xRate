@@ -42,6 +42,14 @@
   <ItemGroup>
     <ProjectReference Include="..\xRate.Core\xRate.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Update="Assets\Fonts\Ubuntu-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Assets\Fonts\Ubuntu-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
   <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution

@@ -53,7 +53,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 {
                     Title = "Waiting for input...",
                     Subtitle = "Format: <amount> <from> <to> (e.g., 100 € $)",
-                    Icon = this.Icon
+                    Icon = new IconInfo("\uE94E")
                 });
                 break;
 
@@ -62,7 +62,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 {
                     Title = "Invalid amount",
                     Subtitle = "Please enter a valid number.",
-                    Icon = this.Icon
+                    Icon = new IconInfo("\uE94E")
                 });
                 break;
 
@@ -71,7 +71,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 {
                     Title = $"Convert {amount} {fromCode} to {toCode}",
                     Subtitle = "Press Enter to fetch live rates",
-                    Icon = this.Icon
+                    Icon = new IconInfo("\uE94E")
                 });
                 break;
         }
@@ -83,7 +83,11 @@ internal sealed partial class xRateExtPage : DynamicListPage
     private async Task PerformConversionAsync(double amount, string from, string to)
     {
         _items.Clear();
-        _items.Add(new ListItem(new NoOpCommand()) { Title = "Fetching rates from API...", Icon = this.Icon });
+        _items.Add(new ListItem(new NoOpCommand()) 
+        {
+            Title = "Fetching rates from API...",
+            Icon = new IconInfo("\uE94E")
+        });
         AddStaticLaunchItem();
         RaiseItemsChanged(_items.Count);
 
@@ -105,7 +109,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
             {
                 Title = formattedResult,
                 Subtitle = $"Rate: 1 {from} = {rate} {to}. Press Enter to copy value.",
-                Icon = this.Icon
+                Icon = new IconInfo("\uE94E")
             });
         }
         else
@@ -114,7 +118,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
             {
                 Title = "Conversion failed",
                 Subtitle = $"Could not find rates for {from} to {to}. Check your connection.",
-                Icon = this.Icon
+                Icon = new IconInfo("\uE94E")
             });
         }
 

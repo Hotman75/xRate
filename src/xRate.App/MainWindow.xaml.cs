@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Animation;
 using System;
 using System.Linq;
+using System.Globalization;
 using Windows.ApplicationModel.DataTransfer;
 using xRate.Core.Helpers;
 using xRate.Core.Services;
@@ -51,8 +52,10 @@ public sealed partial class MainWindow : Window
     {
         string rawInput = AmountTextBox.Text.Replace(',', '.').Trim();
 
+        RateTextBlock.Visibility = Visibility.Collapsed;
+
         if (string.IsNullOrWhiteSpace(rawInput) ||
-            !double.TryParse(rawInput, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double amount))
+            !double.TryParse(rawInput, NumberStyles.Any, CultureInfo.InvariantCulture, out double amount))
         {
             ResultTextBlock.Text = "Please enter a valid number.";
             ShowResultWithAnimation();
@@ -71,8 +74,17 @@ public sealed partial class MainWindow : Window
 
             if (rates != null && rates.Length > 0)
             {
-                double result = amount * rates[0].Rate;
-                ResultTextBlock.Text = $"{amount:N2} {from} = {result:N2} {to}";
+                double rate = rates[0].Rate;
+                double result = amount * rate;
+
+                string formattedAmount = amount.ToString("0.##", CultureInfo.InvariantCulture);
+                string formattedResult = result.ToString("N2", CultureInfo.InvariantCulture);
+                string formattedRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
+
+                ResultTextBlock.Text = $"{formattedAmount} {from} = {formattedResult} {to}";
+
+                RateTextBlock.Text = $"1 {from} = {formattedRate} {to}";
+                RateTextBlock.Visibility = Visibility.Visible;
             }
             else
             {

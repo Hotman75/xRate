@@ -11,6 +11,16 @@
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
             <!-- Other app resources here -->
+            <FontFamily x:Key="UbuntuRegular">ms-appx:///Assets/Fonts/Ubuntu-Regular.ttf#Ubuntu</FontFamily>
+            <FontFamily x:Key="UbuntuMedium">ms-appx:///Assets/Fonts/Ubuntu-Medium.ttf#Ubuntu</FontFamily>
+
+            <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource UbuntuRegular}" />
+            </Style>
+
+            <Style TargetType="Control">
+                <Setter Property="FontFamily" Value="{StaticResource UbuntuRegular}" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

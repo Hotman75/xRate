@@ -22,8 +22,15 @@
         <Grid Grid.Row="1" Padding="20">
             <StackPanel Width="380" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20">
 
-                <TextBlock Text="xRate" FontSize="32" FontWeight="Black" HorizontalAlignment="Center" Foreground="White"
-                    Margin="0,0,0,10" />
+                <TextBlock Text="xRate" FontSize="32" FontFamily="{StaticResource UbuntuMedium}" FontWeight="Medium"
+                    CharacterSpacing="-30" HorizontalAlignment="Center" Margin="0,0,0,15">
+                    <TextBlock.Foreground>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#FFFFFF" Offset="0.3" />
+                            <GradientStop Color="#EBEBEB" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </TextBlock.Foreground>
+                </TextBlock>
 
                 <Grid RowDefinitions="Auto, Auto">
                     <TextBlock Grid.Row="0" Text="Amount" FontSize="14" Foreground="LightGray" Margin="5,0,0,5" />
@@ -75,9 +82,14 @@
                 <Border x:Name="ResultBorder" Visibility="Visible" Opacity="1.0" MinHeight="80" Background="#15FFFFFF"
                     CornerRadius="12" Padding="20">
                     <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock x:Name="ResultTextBlock" Grid.Column="0" FontSize="17" FontWeight="Medium"
-                            TextAlignment="Center" Foreground="#7FDBFF" TextWrapping="Wrap" VerticalAlignment="Center"
-                            Text="Ready to convert" />
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock x:Name="ResultTextBlock" FontSize="17" FontWeight="Medium" TextAlignment="Center"
+                                Foreground="#7FDBFF" TextWrapping="Wrap" Text="Ready to convert" />
+
+                            <TextBlock x:Name="RateTextBlock" FontSize="12" Foreground="Gray" TextAlignment="Center"
+                                Margin="0,4,0,0" Visibility="Collapsed" />
+                        </StackPanel>
 
                         <Button x:Name="CopyButton" Grid.Column="1" Background="Transparent" BorderThickness="0"
                             Margin="10,0,0,0" Click="CopyButton_Click" VerticalAlignment="Center">
