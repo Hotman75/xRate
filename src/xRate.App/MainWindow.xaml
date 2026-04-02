@@ -34,7 +34,7 @@
 
                 <Grid RowDefinitions="Auto, Auto">
                     <TextBlock Grid.Row="0" Text="Amount" FontSize="14" Foreground="LightGray" Margin="5,0,0,5" />
-                    <TextBox Grid.Row="1" x:Name="AmountTextBox" HorizontalAlignment="Stretch"
+                    <TextBox Grid.Row="1" x:Name="AmountTextBox" PlaceholderText="Enter amount..." HorizontalAlignment="Stretch"
                         KeyDown="AmountTextBox_KeyDown" />
                 </Grid>
 
