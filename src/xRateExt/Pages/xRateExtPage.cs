@@ -14,13 +14,18 @@ internal sealed partial class xRateExtPage : DynamicListPage
 {
     private readonly List<ListItem> _items = [];
     private readonly CurrencyService _apiService = new();
+    private readonly SettingsService _settingsService = new();
+    private UserSettings _settings;
     private string _lastSearch = string.Empty;
 
     public xRateExtPage()
     {
         this.Name = "xRate";
         this.Icon = IconHelpers.FromRelativePath("Assets\\icon.png");
-        this.PlaceholderText = "Example: 100 EUR USD or 50 € $";
+
+        _settings = _settingsService.GetSettings(true);
+
+        this.PlaceholderText = "Ex: 100 | 100 € $ | 100 EUR USD";
 
         RefreshList(string.Empty);
     }
@@ -45,7 +50,25 @@ internal sealed partial class xRateExtPage : DynamicListPage
     {
         _items.Clear();
 
+        _settings = _settingsService.GetSettings(true);
+
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            _items.Add(new ListItem(new NoOpCommand())
+            {
+                Title = "Ready to convert",
+                Subtitle = $"Default: {_settings.DefaultFrom} to {_settings.DefaultTo}. Type an amount to start.",
+                Icon = new IconInfo("\uE94E")
+            });
+            AddStaticLaunchItem();
+            RaiseItemsChanged(_items.Count);
+            return;
+        }
+
         var parseStatus = InputParser.TryParse(search, out double amount, out string fromRaw, out string toRaw);
+
+        var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
+        displayFormat.NumberGroupSeparator = " ";
 
         switch (parseStatus)
         {
@@ -53,7 +76,6 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 _items.Add(new ListItem(new NoOpCommand())
                 {
                     Title = "Waiting for input...",
-                    Subtitle = "Format: <amount> <from> <to> (e.g., 100 € $)",
                     Icon = new IconInfo("\uE94E")
                 });
                 break;
@@ -62,18 +84,27 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 _items.Add(new ListItem(new NoOpCommand())
                 {
                     Title = "Invalid amount",
-                    Subtitle = "Please enter a valid number (e.g., 150.50)",
+                    Subtitle = "Please enter a valid number (e.g., 1 500.50)",
+                    Icon = new IconInfo("\uE94E")
+                });
+                break;
+
+            case ParseResult.AmountOnly:
+                string defFrom = _settings.DefaultFrom;
+                string defTo = _settings.DefaultTo;
+
+                _items.Add(new ListItem(new ConvertCommand(() => _ = PerformConversionAsync(amount, defFrom, defTo)))
+                {
+                    Title = $"Convert {amount.ToString("#,0.##", displayFormat)} {defFrom} to {defTo}",
+                    Subtitle = "Press Enter to fetch rates.",
                     Icon = new IconInfo("\uE94E")
                 });
                 break;
 
             case ParseResult.Success:
-                string fromCode = CurrencyMapper.Normalize(fromRaw);
-                string toCode = CurrencyMapper.Normalize(toRaw);
-
-                _items.Add(new ListItem(new ConvertCommand(() => _ = PerformConversionAsync(amount, fromCode, toCode)))
+                _items.Add(new ListItem(new ConvertCommand(() => _ = PerformConversionAsync(amount, fromRaw, toRaw)))
                 {
-                    Title = $"Convert {amount.ToString(CultureInfo.InvariantCulture)} {fromCode} to {toCode}",
+                    Title = $"Convert {amount.ToString("#,0.##", displayFormat)} {fromRaw} to {toRaw}",
                     Subtitle = "Press Enter to fetch live rates",
                     Icon = new IconInfo("\uE94E")
                 });
@@ -92,6 +123,8 @@ internal sealed partial class xRateExtPage : DynamicListPage
             Title = "Fetching rates...",
             Icon = new IconInfo("\uE94E")
         });
+
+        AddStaticLaunchItem();
         RaiseItemsChanged(_items.Count);
 
         var response = await _apiService.GetConversionAsync(from, to);
@@ -99,21 +132,28 @@ internal sealed partial class xRateExtPage : DynamicListPage
         if (_items.Count > 0 && _items[0].Title == "Fetching rates...")
         {
             _items.Clear();
-            var rateInfo = response?.FirstOrDefault();
+            var rateInfo = response?.Rates?.FirstOrDefault();
 
             if (rateInfo != null)
             {
                 double rate = rateInfo.Rate;
                 double finalResult = amount * rate;
 
-                string formattedResult = finalResult.ToString("N2", CultureInfo.InvariantCulture);
-                string formattedAmount = amount.ToString("0.##", CultureInfo.InvariantCulture);
+                var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
+                displayFormat.NumberGroupSeparator = " ";
+
+                string formattedResult = finalResult.ToString("N2", displayFormat);
+                string formattedAmount = amount.ToString("#,0.##", displayFormat);
                 string formattedRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
 
-                _items.Add(new ListItem(new CopyTextCommand(formattedResult))
+                string rawCopyValue = finalResult.ToString("F2", CultureInfo.InvariantCulture);
+
+                string offlineTag = (response != null && response.IsOffline) ? "[Offline] " : "";
+
+                _items.Add(new ListItem(new CopyTextCommand(rawCopyValue))
                 {
                     Title = $"{formattedAmount} {from} = {formattedResult} {to}",
-                    Subtitle = $"Rate: 1 {from} = {formattedRate} {to}. Enter to copy.",
+                    Subtitle = $"{offlineTag}Rate: 1 {from} = {formattedRate} {to}. Enter to copy.",
                     Icon = new IconInfo("\uE94E")
                 });
             }

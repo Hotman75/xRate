@@ -1,12 +1,8 @@
-using Microsoft.UI;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media.Animation;
-using System;
-using System.Linq;
 using System.Globalization;
+using System.Linq;
 using Windows.ApplicationModel.DataTransfer;
 using xRate.Core.Helpers;
 using xRate.Core.Services;
@@ -15,132 +11,164 @@ namespace xRate.App;
 
 public sealed partial class MainWindow : Window
 {
-    private readonly CurrencyService _currencyService = new();
+    private readonly CurrencyService _currencyService;
+    private readonly SettingsService _settingsService;
+    private UserSettings _settings;
+    private string _currentRawResult = string.Empty;
+    private bool _isSwapping = false;
 
     public MainWindow()
     {
         this.InitializeComponent();
+        this.ExtendsContentIntoTitleBar = true;
+        this.SetTitleBar(AppTitleBar);
 
-        IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        WindowId windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
-        AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
+        var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
+        var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
+        appWindow.Resize(new Windows.Graphics.SizeInt32(450, 550));
 
-        appWindow.SetIcon("Assets\\icon.png");
+        _currencyService = new CurrencyService();
+        _settingsService = new SettingsService();
+        _settings = _settingsService.GetSettings();
 
-        ExtendsContentIntoTitleBar = true;
-        SetTitleBar(AppTitleBar);
+        LoadCurrencies();
+    }
 
-        if (appWindow != null)
-        {
-            appWindow.Resize(new Windows.Graphics.SizeInt32 { Width = 450, Height = 580 });
-        }
-
-        FromComboBox.SelectionChanged -= OnCurrencySelectionChanged;
-        ToComboBox.SelectionChanged -= OnCurrencySelectionChanged;
-
+    private void LoadCurrencies()
+    {
         FromComboBox.ItemsSource = CurrencyMapper.SupportedCurrencies;
         ToComboBox.ItemsSource = CurrencyMapper.SupportedCurrencies;
 
-        FromComboBox.SelectedItem = CurrencyMapper.SupportedCurrencies.FirstOrDefault(c => c.StartsWith("EUR"));
-        ToComboBox.SelectedItem = CurrencyMapper.SupportedCurrencies.FirstOrDefault(c => c.StartsWith("USD"));
+        SelectCurrencyInCombo(FromComboBox, _settings.DefaultFrom);
+        SelectCurrencyInCombo(ToComboBox, _settings.DefaultTo);
+    }
 
-        FromComboBox.SelectionChanged += OnCurrencySelectionChanged;
-        ToComboBox.SelectionChanged += OnCurrencySelectionChanged;
+    private void SelectCurrencyInCombo(ComboBox comboBox, string isoCode)
+    {
+        var item = CurrencyMapper.SupportedCurrencies.FirstOrDefault(c => c.StartsWith(isoCode));
+        if (item != null)
+        {
+            comboBox.SelectedItem = item;
+        }
+        else
+        {
+            comboBox.SelectedIndex = 0;
+        }
     }
 
     private async void ConvertButton_Click(object sender, RoutedEventArgs e)
     {
-        string rawInput = AmountTextBox.Text.Replace(',', '.').Trim();
+        if (string.IsNullOrWhiteSpace(AmountTextBox?.Text) ||
+            FromComboBox?.SelectedItem == null ||
+            ToComboBox?.SelectedItem == null)
+            return;
 
-        RateTextBlock.Visibility = Visibility.Collapsed;
-
-        if (string.IsNullOrWhiteSpace(rawInput) ||
-            !double.TryParse(rawInput, NumberStyles.Any, CultureInfo.InvariantCulture, out double amount))
+        if (!double.TryParse(AmountTextBox.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double amount))
         {
-            ResultTextBlock.Text = "Please enter a valid number.";
-            ShowResultWithAnimation();
+            ResultTextBlock.Text = "Invalid amount";
             return;
         }
 
-        string from = CurrencyMapper.Normalize(FromComboBox.SelectedItem as string ?? "EUR");
-        string to = CurrencyMapper.Normalize(ToComboBox.SelectedItem as string ?? "USD");
+        string from = CurrencyMapper.Normalize(FromComboBox.SelectedItem.ToString());
+        string to = CurrencyMapper.Normalize(ToComboBox.SelectedItem.ToString());
 
-        ResultTextBlock.Text = "Fetching rates...";
-        ShowResultWithAnimation();
+        ConvertButton.IsEnabled = false;
+        ResultTextBlock.Text = "Converting...";
+        RateTextBlock.Visibility = Visibility.Collapsed;
+        OfflineWarningTextBlock.Visibility = Visibility.Collapsed;
 
-        try
+        var result = await _currencyService.GetConversionAsync(from, to);
+
+        if (result != null && result.Rates != null && result.Rates.Length > 0)
         {
-            var rates = await _currencyService.GetConversionAsync(from, to);
+            double rate = result.Rates[0].Rate;
+            double finalValue = amount * rate;
 
-            if (rates != null && rates.Length > 0)
+            var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
+            displayFormat.NumberGroupSeparator = " ";
+
+            _currentRawResult = finalValue.ToString("F2", CultureInfo.InvariantCulture);
+
+            string formattedResult = finalValue.ToString("N2", displayFormat);
+            string formattedAmount = amount.ToString("#,0.##", displayFormat);
+
+            ResultTextBlock.Text = $"{formattedAmount} {from} = {formattedResult} {to}";
+
+            string formattedRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
+            RateTextBlock.Text = $"1 {from} = {formattedRate} {to}";
+            RateTextBlock.Visibility = Visibility.Visible;
+
+            if (result.IsOffline && result.OfflineDate.HasValue)
             {
-                double rate = rates[0].Rate;
-                double result = amount * rate;
-
-                string formattedAmount = amount.ToString("0.##", CultureInfo.InvariantCulture);
-                string formattedResult = result.ToString("N2", CultureInfo.InvariantCulture);
-                string formattedRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
-
-                ResultTextBlock.Text = $"{formattedAmount} {from} = {formattedResult} {to}";
-
-                RateTextBlock.Text = $"1 {from} = {formattedRate} {to}";
-                RateTextBlock.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                ResultTextBlock.Text = "Service unavailable.";
+                OfflineWarningTextBlock.Text = $"Offline: rates from {result.OfflineDate.Value.ToString("g", CultureInfo.CurrentUICulture)}";
+                OfflineWarningTextBlock.Visibility = Visibility.Visible;
             }
         }
-        catch
+        else
         {
-            ResultTextBlock.Text = "An error occurred.";
+            ResultTextBlock.Text = "Conversion failed (No connection/Cache)";
+            RateTextBlock.Visibility = Visibility.Collapsed;
         }
+
+        ConvertButton.IsEnabled = true;
     }
 
-    private void SwapButton_Click(object sender, RoutedEventArgs e)
+    private void OnCurrencySelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        FromComboBox.SelectionChanged -= OnCurrencySelectionChanged;
-        ToComboBox.SelectionChanged -= OnCurrencySelectionChanged;
+        CheckDefaultStatus();
 
-        var temp = FromComboBox.SelectedItem;
-        FromComboBox.SelectedItem = ToComboBox.SelectedItem;
-        ToComboBox.SelectedItem = temp;
-
-        FromComboBox.SelectionChanged += OnCurrencySelectionChanged;
-        ToComboBox.SelectionChanged += OnCurrencySelectionChanged;
-
-        if (!string.IsNullOrWhiteSpace(AmountTextBox.Text))
+        if (!_isSwapping && AmountTextBox != null && !string.IsNullOrWhiteSpace(AmountTextBox.Text))
         {
             ConvertButton_Click(this, new RoutedEventArgs());
         }
     }
 
-    private void OnCurrencySelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void SwapButton_Click(object sender, RoutedEventArgs e)
     {
+        _isSwapping = true;
+
+        var temp = FromComboBox.SelectedItem;
+        FromComboBox.SelectedItem = ToComboBox.SelectedItem;
+        ToComboBox.SelectedItem = temp;
+
+        _isSwapping = false;
+
+        CheckDefaultStatus();
+
         if (AmountTextBox != null && !string.IsNullOrWhiteSpace(AmountTextBox.Text))
         {
             ConvertButton_Click(this, new RoutedEventArgs());
         }
     }
 
-    private void ShowResultWithAnimation()
+    private void CheckDefaultStatus()
     {
-        ResultBorder.Visibility = Visibility.Visible;
+        if (FromComboBox?.SelectedItem == null || ToComboBox?.SelectedItem == null || SetDefaultButton == null) return;
 
-        if (ResultBorder.Opacity < 1.0)
+        string currentFrom = CurrencyMapper.Normalize(FromComboBox.SelectedItem.ToString());
+        string currentTo = CurrencyMapper.Normalize(ToComboBox.SelectedItem.ToString());
+
+        if (currentFrom != _settings.DefaultFrom || currentTo != _settings.DefaultTo)
         {
-            Storyboard storyboard = new Storyboard();
-            DoubleAnimation fade = new DoubleAnimation
-            {
-                To = 1.0,
-                Duration = new Duration(TimeSpan.FromMilliseconds(300)),
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
-            };
-            Storyboard.SetTarget(fade, ResultBorder);
-            Storyboard.SetTargetProperty(fade, "Opacity");
-            storyboard.Children.Add(fade);
-            storyboard.Begin();
+            SetDefaultButton.Visibility = Visibility.Visible;
         }
+        else
+        {
+            SetDefaultButton.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async void SetDefaultButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (FromComboBox.SelectedItem == null || ToComboBox.SelectedItem == null) return;
+
+        _settings.DefaultFrom = CurrencyMapper.Normalize(FromComboBox.SelectedItem.ToString());
+        _settings.DefaultTo = CurrencyMapper.Normalize(ToComboBox.SelectedItem.ToString());
+
+        await _settingsService.SaveSettingsAsync(_settings);
+
+        SetDefaultButton.Visibility = Visibility.Collapsed;
     }
 
     private void AmountTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -148,20 +176,15 @@ public sealed partial class MainWindow : Window
         if (e.Key == Windows.System.VirtualKey.Enter)
         {
             ConvertButton_Click(this, new RoutedEventArgs());
-            e.Handled = true;
         }
     }
 
     private void CopyButton_Click(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrEmpty(ResultTextBlock.Text) || ResultTextBlock.Text.Contains("...")) return;
-
-        var parts = ResultTextBlock.Text.Split('=');
-        if (parts.Length > 1)
+        if (!string.IsNullOrEmpty(_currentRawResult))
         {
-            var resultPart = parts[1].Trim().Split(' ')[0];
             var dataPackage = new DataPackage();
-            dataPackage.SetText(resultPart);
+            dataPackage.SetText(_currentRawResult);
             Clipboard.SetContent(dataPackage);
         }
     }

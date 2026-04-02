@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace xRate.Core.Helpers;
@@ -8,15 +7,12 @@ public enum ParseResult
 {
     Incomplete,
     InvalidAmount,
+    AmountOnly,
     Success
 }
 
 public static class InputParser
 {
-    // Matches patterns like: "100 EUR USD", "100EUR USD", "100.50 € $", "100eur usd"
-    // Group 1: Amount (\d+(?:[.,]\d+)?)
-    // Group 2: From currency ([^\d\s]+)
-    // Group 3: To currency ([^\d\s]+)
     private static readonly Regex InputRegex = new Regex(
         @"^(\d+(?:[.,]\d+)?)\s*([^\d\s]+)?\s*([^\d\s]+)?$",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -51,13 +47,19 @@ public static class InputParser
             return ParseResult.InvalidAmount;
         }
 
-        from = match.Groups[2].Success ? CurrencyMapper.Normalize(match.Groups[2].Value) : string.Empty;
-        to = match.Groups[3].Success ? CurrencyMapper.Normalize(match.Groups[3].Value) : string.Empty;
+        if (!match.Groups[2].Success && !match.Groups[3].Success)
+        {
+            return ParseResult.AmountOnly;
+        }
 
-        if (string.IsNullOrEmpty(from) || string.IsNullOrEmpty(to))
+        from = match.Groups[2].Success ? CurrencyMapper.Normalize(match.Groups[2].Value) : string.Empty;
+
+        if (!match.Groups[3].Success)
         {
             return ParseResult.Incomplete;
         }
+
+        to = CurrencyMapper.Normalize(match.Groups[3].Value);
 
         return ParseResult.Success;
     }

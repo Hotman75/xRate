@@ -1,20 +1,57 @@
-﻿namespace xRate.Core.Helpers;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+
+namespace xRate.Core.Helpers;
 
 public static class CurrencyMapper
 {
-    public static readonly Dictionary<string, string> _symbolMap = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, string> _symbolMap = new(StringComparer.OrdinalIgnoreCase)
     {
-        { "€", "EUR" }, { "$", "USD" }, { "£", "GBP" }, { "¥", "JPY" },
-        { "₹", "INR" }, { "₽", "RUB" }, { "₩", "KRW" }, { "₺", "TRY" },
-        { "฿", "THB" }, { "₫", "VND" }, { "zł", "PLN" }, { "₪", "ILS" },
-        { "₱", "PHP" }, { "A$", "AUD" }, { "C$", "CAD" }, { "NZ$", "NZD" },
-        { "HK$", "HKD" }, { "R$", "BRL" }, { "S$", "SGD" }, { "NT$", "TWD" },
-        { "MX$", "MXN" }, { "U$", "UYU" }, { "RD$", "DOP" }, { "J$", "JMD" },
-        { "Kč", "CZK" }, { "Ft", "HUF" }, { "kn", "HRK" }, { "din", "RSD" },
-        { "lei", "RON" }, { "Lev", "BGN" }, { "Fr", "CHF" }, { "RM", "MYR" },
-        { "Rp", "IDR" }, { "Rs", "INR" }, { "៛", "KHR" }, { "₭", "LAK" },
-        { "Tk", "BDT" }, { "QR", "QAR" }, { "SR", "SAR" }, { "DH", "AED" },
-        { "R", "ZAR" }, { "Ksh", "KES" }
+        { "€", "EUR" },
+        { "$", "USD" },
+        { "£", "GBP" },
+        { "¥", "JPY" },
+        { "₪", "ILS" },
+        { "₺", "TRY" },
+        { "₽", "RUB" },
+        { "฿", "THB" },
+        { "₫", "VND" },
+        { "₩", "KRW" },
+        { "₱", "PHP" },
+        { "₴", "UAH" },
+        { "₸", "KZT" },
+        { "₡", "CRC" },
+        { "₹", "INR" },
+        { "৳", "BDT" },
+        { "៛", "KHR" },
+        { "₭", "LAK" },
+        { "₲", "PYG" },
+        { "₦", "NGN" },
+        { "₵", "GHS" },
+        { "D", "GMD" },
+        { "G", "HTG" },
+        { "P", "BWP" },
+        { "E", "SZL" },
+        { "R", "ZAR" },
+        { "ƒ", "ANG" },
+        { "﷼", "IRR" },
+        { "kr", "SEK" },
+        { "A$", "AUD" },
+        { "C$", "CAD" },
+        { "S$", "SGD" },
+        { "U$", "UYU" },
+        { "R$", "BRL" },
+        { "zł", "PLN" },
+        { "Kz", "AOA" },
+        { "Bs", "VES" },
+        { "Rp", "IDR" },
+        { "RM", "MYR" },
+        { "Ar", "MGA" },
+        { "MK", "MWK" },
+        { "UM", "MRU" },
+        { "Db", "STN" }
     };
 
     private static readonly string[] RawCurrencies =
@@ -49,19 +86,19 @@ public static class CurrencyMapper
         "LSL - Lesotho Loti", "LYD - Libyan Dinar", "MAD - Moroccan Dirham",
         "MDL - Moldovan Leu", "MGA - Malagasy Ariary", "MKD - Macedonian Denar",
         "MMK - Myanmar Kyat", "MNT - Mongolian Tugrik", "MOP - Macanese Pataca",
-        "MRO - Mauritanian Ouguiya (Pre-2018)", "MRU - Mauritanian Ouguiya", "MUR - Mauritian Rupee",
-        "MVR - Maldivian Rufiyaa", "MWK - Malawian Kwacha", "MXN - Mexican Peso",
-        "MYR - Malaysian Ringgit", "MZN - Mozambican Metical", "NAD - Namibian Dollar",
-        "NGN - Nigerian Naira", "NIO - Nicaraguan Córdoba", "NOK - Norwegian Krone",
-        "NPR - Nepalese Rupee", "NZD - New Zealand Dollar", "OMR - Omani Rial",
-        "PAB - Panamanian Balboa", "PEN - Peruvian Sol", "PGK - Papua New Guinean Kina",
-        "PHP - Philippine Peso", "PKR - Pakistani Rupee", "PLN - Polish Zloty",
-        "PYG - Paraguayan Guarani", "QAR - Qatari Rial", "RON - Romanian Leu",
-        "RSD - Serbian Dinar", "RUB - Russian Ruble", "RWF - Rwandan Franc",
-        "SAR - Saudi Riyal", "SBD - Solomon Islands Dollar", "SCR - Seychellois Rupee",
-        "SDG - Sudanese Pound", "SEK - Swedish Krone", "SGD - Singapore Dollar",
-        "SHP - St. Helena Pound", "SLE - Sierra Leonean Leone", "SOS - Somali Shilling",
-        "SRD - Surinamese Dollar", "SSP - South Sudanese Pound", "STN - São Tomé and Príncipe Dobra",
+        "MRU - Mauritanian Ouguiya", "MUR - Mauritian Rupee", "MVR - Maldivian Rufiyaa",
+        "MWK - Malawian Kwacha", "MXN - Mexican Peso", "MYR - Malaysian Ringgit",
+        "MZN - Mozambican Metical", "NAD - Namibian Dollar", "NGN - Nigerian Naira",
+        "NIO - Nicaraguan Córdoba", "NOK - Norwegian Krone", "NPR - Nepalese Rupee",
+        "NZD - New Zealand Dollar", "OMR - Omani Rial", "PAB - Panamanian Balboa",
+        "PEN - Peruvian Sol", "PGK - Papua New Guinean Kina", "PHP - Philippine Peso",
+        "PKR - Pakistani Rupee", "PLN - Polish Zloty", "PYG - Paraguayan Guarani",
+        "QAR - Qatari Rial", "RON - Romanian Leu", "RSD - Serbian Dinar",
+        "RUB - Russian Ruble", "RWF - Rwandan Franc", "SAR - Saudi Riyal",
+        "SBD - Solomon Islands Dollar", "SCR - Seychellois Rupee", "SDG - Sudanese Pound",
+        "SEK - Swedish Krone", "SGD - Singapore Dollar", "SHP - St. Helena Pound",
+        "SLE - Sierra Leonean Leone", "SOS - Somali Shilling", "SRD - Surinamese Dollar",
+        "SSP - South Sudanese Pound", "STN - São Tomé and Príncipe Dobra",
         "SVC - Salvadoran Colón", "SYP - Syrian Pound", "SZL - Swazi Lilangeni",
         "THB - Thai Baht", "TJS - Tajikistani Somoni", "TMT - Turkmenistani Manat",
         "TND - Tunisian Dinar", "TOP - Tongan Paʻanga", "TRY - Turkish Lira",
@@ -70,10 +107,9 @@ public static class CurrencyMapper
         "UYU - Uruguayan Peso", "UZS - Uzbekistan Som", "VES - Venezuelan Bolívar",
         "VND - Vietnamese Dong", "VUV - Vanuatu Vatu", "WST - Samoan Tala",
         "XAF - CFA Franc BEAC", "XAG - Silver Ounce", "XAU - Gold Ounce",
-        "XCD - East Caribbean Dollar", "XCG - Caribbean Guilder", "XOF - CFA Franc BCEAO",
-        "XPD - Palladium Ounce", "XPF - CFP Franc", "XPT - Platinum Ounce",
+        "XCD - East Caribbean Dollar", "XOF - CFA Franc BCEAO", "XPF - CFP Franc",
         "YER - Yemeni Rial", "ZAR - South African Rand", "ZMW - Zambian Kwacha",
-        "ZWG - Zimbabwean Gold", "BTN - Bhutanese Ngultrum", "ANG - Netherlands Antillean Guilder"
+        "ZWG - Zimbabwean Gold"
     };
 
     public static readonly List<string> SupportedCurrencies;
@@ -84,7 +120,7 @@ public static class CurrencyMapper
             .GroupBy(kvp => kvp.Value)
             .ToDictionary(
                 g => g.Key,
-                g => string.Join(", ", g.Select(kvp => kvp.Key))
+                g => string.Join(", ", g.Select(kvp => kvp.Key).Distinct())
             );
 
         SupportedCurrencies = RawCurrencies.Select(c =>
