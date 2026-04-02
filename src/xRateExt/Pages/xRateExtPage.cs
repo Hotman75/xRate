@@ -1,6 +1,5 @@
 using Microsoft.CommandPalette.Extensions;
 using Microsoft.CommandPalette.Extensions.Toolkit;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -15,12 +14,13 @@ internal sealed partial class xRateExtPage : DynamicListPage
 {
     private readonly List<ListItem> _items = [];
     private readonly CurrencyService _apiService = new();
+    private string _lastSearch = string.Empty;
 
     public xRateExtPage()
     {
-        this.Name = "xRate Converter";
+        this.Name = "xRate";
         this.Icon = IconHelpers.FromRelativePath("Assets\\icon.png");
-        this.PlaceholderText = "Format: <amount> <from> <to> (e.g., 100 € $)";
+        this.PlaceholderText = "Example: 100 EUR USD or 50 € $";
 
         RefreshList(string.Empty);
     }
@@ -30,13 +30,14 @@ internal sealed partial class xRateExtPage : DynamicListPage
         _items.Add(new ListItem(new LaunchAppCommand())
         {
             Title = "Open xRate App",
-            Subtitle = "Launch the full desktop application",
+            Subtitle = "Launch the desktop application",
             Icon = this.Icon
         });
     }
 
     public override void UpdateSearchText(string oldSearch, string newSearch)
     {
+        _lastSearch = newSearch;
         RefreshList(newSearch);
     }
 
@@ -44,7 +45,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
     {
         _items.Clear();
 
-        var parseStatus = InputParser.TryParse(search, out double amount, out string fromCode, out string toCode);
+        var parseStatus = InputParser.TryParse(search, out double amount, out string fromRaw, out string toRaw);
 
         switch (parseStatus)
         {
@@ -61,15 +62,18 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 _items.Add(new ListItem(new NoOpCommand())
                 {
                     Title = "Invalid amount",
-                    Subtitle = "Please enter a valid number.",
+                    Subtitle = "Please enter a valid number (e.g., 150.50)",
                     Icon = new IconInfo("\uE94E")
                 });
                 break;
 
             case ParseResult.Success:
+                string fromCode = CurrencyMapper.Normalize(fromRaw);
+                string toCode = CurrencyMapper.Normalize(toRaw);
+
                 _items.Add(new ListItem(new ConvertCommand(() => _ = PerformConversionAsync(amount, fromCode, toCode)))
                 {
-                    Title = $"Convert {amount} {fromCode} to {toCode}",
+                    Title = $"Convert {amount.ToString(CultureInfo.InvariantCulture)} {fromCode} to {toCode}",
                     Subtitle = "Press Enter to fetch live rates",
                     Icon = new IconInfo("\uE94E")
                 });
@@ -83,47 +87,49 @@ internal sealed partial class xRateExtPage : DynamicListPage
     private async Task PerformConversionAsync(double amount, string from, string to)
     {
         _items.Clear();
-        _items.Add(new ListItem(new NoOpCommand()) 
+        _items.Add(new ListItem(new NoOpCommand())
         {
-            Title = "Fetching rates from API...",
+            Title = "Fetching rates...",
             Icon = new IconInfo("\uE94E")
         });
-        AddStaticLaunchItem();
         RaiseItemsChanged(_items.Count);
 
         var response = await _apiService.GetConversionAsync(from, to);
 
-        _items.Clear();
-        var rateInfo = response?.FirstOrDefault();
-
-        if (rateInfo != null)
+        if (_items.Count > 0 && _items[0].Title == "Fetching rates...")
         {
-            double rate = rateInfo.Rate;
-            double finalResult = amount * rate;
-            double roundedResult = Math.Round(finalResult, 2, MidpointRounding.AwayFromZero);
+            _items.Clear();
+            var rateInfo = response?.FirstOrDefault();
 
-            string formattedResult = $"{roundedResult.ToString("N2", CultureInfo.InvariantCulture)} {to}";
-            string rawAmount = roundedResult.ToString("F2", CultureInfo.InvariantCulture);
-
-            _items.Add(new ListItem(new CopyTextCommand(rawAmount))
+            if (rateInfo != null)
             {
-                Title = formattedResult,
-                Subtitle = $"Rate: 1 {from} = {rate} {to}. Press Enter to copy value.",
-                Icon = new IconInfo("\uE94E")
-            });
-        }
-        else
-        {
-            _items.Add(new ListItem(new NoOpCommand())
-            {
-                Title = "Conversion failed",
-                Subtitle = $"Could not find rates for {from} to {to}. Check your connection.",
-                Icon = new IconInfo("\uE94E")
-            });
-        }
+                double rate = rateInfo.Rate;
+                double finalResult = amount * rate;
 
-        AddStaticLaunchItem();
-        RaiseItemsChanged(_items.Count);
+                string formattedResult = finalResult.ToString("N2", CultureInfo.InvariantCulture);
+                string formattedAmount = amount.ToString("0.##", CultureInfo.InvariantCulture);
+                string formattedRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
+
+                _items.Add(new ListItem(new CopyTextCommand(formattedResult))
+                {
+                    Title = $"{formattedAmount} {from} = {formattedResult} {to}",
+                    Subtitle = $"Rate: 1 {from} = {formattedRate} {to}. Enter to copy.",
+                    Icon = new IconInfo("\uE94E")
+                });
+            }
+            else
+            {
+                _items.Add(new ListItem(new NoOpCommand())
+                {
+                    Title = "Conversion failed",
+                    Subtitle = "Check your connection or the currency codes.",
+                    Icon = new IconInfo("\uE94E")
+                });
+            }
+
+            AddStaticLaunchItem();
+            RaiseItemsChanged(_items.Count);
+        }
     }
 
     public override IListItem[] GetItems() => _items.ToArray();
