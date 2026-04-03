@@ -28,7 +28,12 @@ public class CurrencyService
         var userProfileFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var xRateFolder = Path.Combine(userProfileFolder, ".xrate");
 
-        Directory.CreateDirectory(xRateFolder);
+        try
+        {
+            Directory.CreateDirectory(xRateFolder);
+        }
+        catch (UnauthorizedAccessException) {
+        }
 
         _cacheFilePath = Path.Combine(xRateFolder, "rates_all.json");
 
@@ -37,24 +42,52 @@ public class CurrencyService
 
     private void LoadGlobalCache()
     {
-        if (File.Exists(_cacheFilePath))
+        if (!File.Exists(_cacheFilePath))
+        {
+            _globalCache = new();
+            return;
+        }
+
+        int retries = 3;
+        while (retries > 0)
         {
             try
             {
-                var json = File.ReadAllText(_cacheFilePath);
+                using var stream = new FileStream(_cacheFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(stream);
+                var json = reader.ReadToEnd();
+
                 _globalCache = JsonSerializer.Deserialize<GlobalCache>(json) ?? new();
+                return;
             }
-            catch { _globalCache = new(); }
+            catch (IOException)
+            {
+                retries--;
+                if (retries == 0) _globalCache = new();
+                System.Threading.Thread.Sleep(50);
+            }
+            catch
+            {
+                _globalCache = new();
+                return;
+            }
         }
     }
 
     private bool IsInternetAvailable()
     {
-        var profile = NetworkInformation.GetInternetConnectionProfile();
-        if (profile == null) return false;
+        try
+        {
+            var profile = NetworkInformation.GetInternetConnectionProfile();
+            if (profile == null) return false;
 
-        var level = profile.GetNetworkConnectivityLevel();
-        return level == NetworkConnectivityLevel.InternetAccess;
+            var level = profile.GetNetworkConnectivityLevel();
+            return level == NetworkConnectivityLevel.InternetAccess;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private async Task RefreshGlobalCacheIfNeededAsync()
@@ -80,12 +113,31 @@ public class CurrencyService
                     _globalCache.LastUpdate = DateTime.Now;
 
                     var json = JsonSerializer.Serialize(_globalCache);
-                    await File.WriteAllTextAsync(_cacheFilePath, json);
+                    await SaveCacheSafelyAsync(json);
                 }
             }
         }
         catch
         {
+        }
+    }
+
+    private async Task SaveCacheSafelyAsync(string json)
+    {
+        int retries = 3;
+        while (retries > 0)
+        {
+            try
+            {
+                await File.WriteAllTextAsync(_cacheFilePath, json);
+                return;
+            }
+            catch (IOException)
+            {
+                retries--;
+                if (retries == 0) return;
+                await Task.Delay(100);
+            }
         }
     }
 
@@ -125,18 +177,15 @@ public class CurrencyService
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
             {
-                System.Diagnostics.Debug.WriteLine("Rate limited (429) by Frankfurter API. Falling back to cache.");
                 return CalculateFromCache(baseCurrency, quoteCurrency);
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"API Error ({response.StatusCode}). Falling back to cache.");
                 return CalculateFromCache(baseCurrency, quoteCurrency);
             }
         }
-        catch (Exception ex)
+        catch
         {
-            System.Diagnostics.Debug.WriteLine($"Network Error: {ex.Message}");
             return CalculateFromCache(baseCurrency, quoteCurrency);
         }
 

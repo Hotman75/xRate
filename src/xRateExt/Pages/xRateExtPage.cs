@@ -102,9 +102,17 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 break;
 
             case ParseResult.Success:
-                _items.Add(new ListItem(new ConvertCommand(() => _ = PerformConversionAsync(amount, fromRaw, toRaw)))
+                string finalFrom = CurrencyMapper.Normalize(fromRaw);
+
+                string finalTo = string.IsNullOrWhiteSpace(toRaw)
+                    ? _settings.DefaultTo
+                    : CurrencyMapper.Normalize(toRaw);
+
+                if (string.IsNullOrEmpty(finalFrom)) finalFrom = _settings.DefaultFrom;
+
+                _items.Add(new ListItem(new ConvertCommand(() => _ = PerformConversionAsync(amount, finalFrom, finalTo)))
                 {
-                    Title = $"Convert {amount.ToString("#,0.##", displayFormat)} {fromRaw} to {toRaw}",
+                    Title = $"Convert {amount.ToString("#,0.##", displayFormat)} {finalFrom} to {finalTo}",
                     Subtitle = "Press Enter to fetch live rates",
                     Icon = new IconInfo("\uE94E")
                 });
@@ -162,7 +170,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 _items.Add(new ListItem(new NoOpCommand())
                 {
                     Title = "Conversion failed",
-                    Subtitle = "Check your connection or the currency codes.",
+                    Subtitle = "Offline mode requires at least one previous connection to cache rates.",
                     Icon = new IconInfo("\uE94E")
                 });
             }

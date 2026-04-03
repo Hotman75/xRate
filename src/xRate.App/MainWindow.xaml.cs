@@ -1,8 +1,10 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using System;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Windows.ApplicationModel.DataTransfer;
 using xRate.Core.Helpers;
 using xRate.Core.Services;
@@ -17,6 +19,19 @@ public sealed partial class MainWindow : Window
     private string _currentRawResult = string.Empty;
     private bool _isSwapping = false;
 
+    [StructLayout(LayoutKind.Sequential)]
+    struct MINMAXINFO { public POINT ptReserved; public POINT ptMaxSize; public POINT ptMaxPosition; public POINT ptMinTrackSize; public POINT ptMaxTrackSize; }
+    [StructLayout(LayoutKind.Sequential)]
+    struct POINT { public int x; public int y; }
+    private const int WM_GETMINMAXINFO = 0x0024;
+    private delegate IntPtr WinProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+    private WinProc _newWndProc;
+    private IntPtr _oldWndProc = IntPtr.Zero;
+    [DllImport("User32.dll")]
+    private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, WinProc dwNewLong);
+    [DllImport("User32.dll")]
+    private static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
     public MainWindow()
     {
         this.InitializeComponent();
@@ -26,13 +41,29 @@ public sealed partial class MainWindow : Window
         var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
         var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
         var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
+
         appWindow.Resize(new Windows.Graphics.SizeInt32(450, 550));
+
+        _newWndProc = new WinProc(WindowProcess);
+        _oldWndProc = SetWindowLongPtr(hWnd, -4, _newWndProc);
 
         _currencyService = new CurrencyService();
         _settingsService = new SettingsService();
         _settings = _settingsService.GetSettings();
 
         LoadCurrencies();
+    }
+
+    private IntPtr WindowProcess(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+    {
+        if (msg == WM_GETMINMAXINFO)
+        {
+            var mmi = Marshal.PtrToStructure<MINMAXINFO>(lParam);
+            mmi.ptMinTrackSize.x = 450;
+            mmi.ptMinTrackSize.y = 550;
+            Marshal.StructureToPtr(mmi, lParam, false);
+        }
+        return CallWindowProc(_oldWndProc, hWnd, msg, wParam, lParam);
     }
 
     private void LoadCurrencies()
@@ -64,9 +95,15 @@ public sealed partial class MainWindow : Window
             ToComboBox?.SelectedItem == null)
             return;
 
-        if (!double.TryParse(AmountTextBox.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double amount))
+        if (!InputParser.TryExtractAmount(AmountTextBox.Text, out double amount))
         {
             ResultTextBlock.Text = "Invalid amount";
+            return;
+        }
+
+        if (Math.Abs(amount) > 1_000_000_000_000)
+        {
+            ResultTextBlock.Text = "Amount too high";
             return;
         }
 
@@ -186,6 +223,14 @@ public sealed partial class MainWindow : Window
             var dataPackage = new DataPackage();
             dataPackage.SetText(_currentRawResult);
             Clipboard.SetContent(dataPackage);
+        }
+    }
+
+    private void AmountTextBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        if (AmountTextBox != null)
+        {
+            AmountTextBox.SelectAll();
         }
     }
 }

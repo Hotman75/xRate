@@ -30,28 +30,16 @@ public static class CurrencyMapper
         { "₲", "PYG" },
         { "₦", "NGN" },
         { "₵", "GHS" },
-        { "D", "GMD" },
-        { "G", "HTG" },
-        { "P", "BWP" },
-        { "E", "SZL" },
-        { "R", "ZAR" },
         { "ƒ", "ANG" },
         { "﷼", "IRR" },
         { "kr", "SEK" },
+        { "zł", "PLN" },
         { "A$", "AUD" },
         { "C$", "CAD" },
         { "S$", "SGD" },
         { "U$", "UYU" },
         { "R$", "BRL" },
-        { "zł", "PLN" },
-        { "Kz", "AOA" },
-        { "Bs", "VES" },
-        { "Rp", "IDR" },
-        { "RM", "MYR" },
-        { "Ar", "MGA" },
-        { "MK", "MWK" },
-        { "UM", "MRU" },
-        { "Db", "STN" }
+        { "Bs", "VES" }
     };
 
     private static readonly string[] RawCurrencies =
@@ -136,7 +124,7 @@ public static class CurrencyMapper
 
     public static string Normalize(string input)
     {
-        if (string.IsNullOrWhiteSpace(input)) return "EUR";
+        if (string.IsNullOrWhiteSpace(input)) return string.Empty;
         string cleanInput = input.Trim();
 
         if (_symbolMap.TryGetValue(cleanInput, out var code))

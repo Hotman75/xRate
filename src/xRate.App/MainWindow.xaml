@@ -37,7 +37,7 @@
                 <Grid RowDefinitions="Auto, Auto">
                     <TextBlock Grid.Row="0" Text="Amount" FontSize="14" Foreground="LightGray" Margin="5,0,0,5" />
                     <TextBox Grid.Row="1" x:Name="AmountTextBox" PlaceholderText="Enter amount..."
-                        HorizontalAlignment="Stretch" KeyDown="AmountTextBox_KeyDown" />
+                        HorizontalAlignment="Stretch" KeyDown="AmountTextBox_KeyDown" GotFocus="AmountTextBox_GotFocus" />
                 </Grid>
 
                 <StackPanel Spacing="5">
@@ -96,10 +96,10 @@
                                 Foreground="#7FDBFF" TextWrapping="Wrap" Text="Ready to convert" />
 
                             <TextBlock x:Name="RateTextBlock" FontSize="12" Foreground="Gray" TextAlignment="Center"
-                                Margin="0,4,0,0" Visibility="Collapsed" />
+                                Margin="0,4,0,0" Visibility="Collapsed" TextWrapping="Wrap" />
 
                             <TextBlock x:Name="OfflineWarningTextBlock" FontSize="11" Foreground="#FFA500"
-                                TextAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed" />
+                                TextAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed" TextWrapping="Wrap" />
                         </StackPanel>
 
                         <Button x:Name="CopyButton" Grid.Column="1" Background="Transparent" BorderThickness="0"
