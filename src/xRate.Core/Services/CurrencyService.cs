@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Windows.Networking.Connectivity;
+using xRate.Core.Helpers;
 using xRate.Core.Models;
 
 namespace xRate.Core.Services;
@@ -25,18 +26,7 @@ public class CurrencyService
 
     public CurrencyService()
     {
-        var userProfileFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var xRateFolder = Path.Combine(userProfileFolder, ".xrate");
-
-        try
-        {
-            Directory.CreateDirectory(xRateFolder);
-        }
-        catch (UnauthorizedAccessException) {
-        }
-
-        _cacheFilePath = Path.Combine(xRateFolder, "rates_all.json");
-
+        _cacheFilePath = PathHelper.GetCachePath();
         LoadGlobalCache();
     }
 
@@ -48,29 +38,26 @@ public class CurrencyService
             return;
         }
 
-        int retries = 3;
-        while (retries > 0)
+        try
         {
-            try
-            {
-                using var stream = new FileStream(_cacheFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                using var reader = new StreamReader(stream);
-                var json = reader.ReadToEnd();
+            var json = File.ReadAllText(_cacheFilePath);
+            _globalCache = JsonSerializer.Deserialize<GlobalCache>(json) ?? new();
+        }
+        catch
+        {
+            _globalCache = new();
+        }
+    }
 
-                _globalCache = JsonSerializer.Deserialize<GlobalCache>(json) ?? new();
-                return;
-            }
-            catch (IOException)
-            {
-                retries--;
-                if (retries == 0) _globalCache = new();
-                System.Threading.Thread.Sleep(50);
-            }
-            catch
-            {
-                _globalCache = new();
-                return;
-            }
+    private async Task SaveCacheSafelyAsync(string json)
+    {
+        try
+        {
+            await File.WriteAllTextAsync(_cacheFilePath, json);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error saving cache: {ex.Message}");
         }
     }
 
@@ -122,25 +109,6 @@ public class CurrencyService
         }
     }
 
-    private async Task SaveCacheSafelyAsync(string json)
-    {
-        int retries = 3;
-        while (retries > 0)
-        {
-            try
-            {
-                await File.WriteAllTextAsync(_cacheFilePath, json);
-                return;
-            }
-            catch (IOException)
-            {
-                retries--;
-                if (retries == 0) return;
-                await Task.Delay(100);
-            }
-        }
-    }
-
     public async Task<ConversionResult?> GetConversionAsync(string from, string to)
     {
         var baseCurrency = from.ToUpper().Trim();
@@ -174,10 +142,6 @@ public class CurrencyService
 
                 if (data != null)
                     return new ConversionResult { Rates = data, IsOffline = false };
-            }
-            else if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-            {
-                return CalculateFromCache(baseCurrency, quoteCurrency);
             }
             else
             {

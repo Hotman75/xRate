@@ -1,7 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
+using xRate.Core.Helpers;
 
 namespace xRate.Core.Services;
 
@@ -18,11 +16,7 @@ public class SettingsService
 
     public SettingsService()
     {
-        var userProfileFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var xRateFolder = Path.Combine(userProfileFolder, ".xrate");
-
-        Directory.CreateDirectory(xRateFolder);
-        _settingsFilePath = Path.Combine(xRateFolder, "settings.json");
+        _settingsFilePath = PathHelper.GetSettingsPath();
     }
 
     public UserSettings GetSettings(bool forceReload = false)
