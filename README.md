@@ -15,7 +15,7 @@ xRate is available in the Command Palette for the fastest conversion tool possib
 
 The desktop app provides a standalone tool.
 
-<img width="434" height="541" alt="xRate App" src="https://github.com/user-attachments/assets/dfb3ca24-5d34-42c1-acb7-ff9b8a628a28" />
+<img width="434" height="541" alt="xRate" src="https://github.com/user-attachments/assets/9ca65bcc-4eb7-4caa-bd00-4a46db856c02" />
 
 * **Default Currencies**: Set your preferred "From" and "To" currencies that can be reused in the Command Palette.
 
