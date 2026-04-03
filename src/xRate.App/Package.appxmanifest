@@ -9,15 +9,15 @@
   IgnorableNamespaces="uap rescap systemai">
 
 	<Identity
-	  Name="7ef42096-718b-4bf9-8cf9-553257eed3c9"
-	  Publisher="CN=Hotman"
+	  Name="OthmanAMOR.55979B0A02F44"
+	  Publisher="CN=CA938298-1CC2-4C29-B546-D8367F20D6A1"
 	  Version="1.0.0.0" />
 
-	<mp:PhoneIdentity PhoneProductId="7ef42096-718b-4bf9-8cf9-553257eed3c9" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+	<mp:PhoneIdentity PhoneProductId="de75ec5b-3717-4df6-8085-9b0eac5f5105" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
 	<Properties>
-		<DisplayName>xRate.App</DisplayName>
-		<PublisherDisplayName>Hotman</PublisherDisplayName>
+		<DisplayName>xRate - Quick Currency Converter</DisplayName>
+		<PublisherDisplayName>Othman AMOR</PublisherDisplayName>
 		<Logo>Assets\StoreLogo.png</Logo>
 	</Properties>
 
