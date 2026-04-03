@@ -2,7 +2,7 @@
 
 Instant currency conversion tool. Available as a standalone desktop app or integrated directly into Microsoft PowerToys, xRate provides fast and simple real-time exchange rates.
 
-<video src="https://github.com/user-attachments/assets/c7d5b0bd-e7ff-4060-a1c1-57c790fcf189" autoplay loop muted playsinline></video>
+https://github.com/user-attachments/assets/e8c6f341-bfa1-420d-9de5-76bc26f3dae4
 
 ## ⚡ Quick Convert
 
