@@ -29,9 +29,5 @@ public class Program
             server.Stop();
             server.UnsafeDispose();
         }
-        else
-        {
-            Process.Start(new ProcessStartInfo("xrate://") { UseShellExecute = true });
-        }
     }
 }
