@@ -1,6 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using System;
+using xRate.Core.Helpers;
 
 namespace xRate.App;
 
@@ -15,6 +16,9 @@ public partial class App : Application
 
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
+
+        PathHelper.Initialize();
+
         _window = new MainWindow();
 
         var activatedArgs = AppInstance.GetCurrent().GetActivatedEventArgs();
