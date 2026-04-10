@@ -40,12 +40,12 @@ internal sealed partial class xRateExtPage : DynamicListPage
         if (string.IsNullOrWhiteSpace(newSearch))
         {
             _debounceTimer?.Cancel();
-            _items.Clear();
-            RaiseItemsChanged(0);
+            UpdateDisplay(string.Empty);
             return;
         }
 
         var parseStatus = InputParser.TryParse(newSearch, out double amount, out string fromRaw, out string toRaw);
+
         if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly)
         {
             string from = string.IsNullOrEmpty(fromRaw) ? _settings.DefaultFrom : CurrencyMapper.Normalize(fromRaw);
@@ -61,6 +61,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
             }
 
             UpdateDisplay(newSearch, isFetching: true);
+
             _debounceTimer?.Cancel();
             _debounceTimer = new CancellationTokenSource();
             var token = _debounceTimer.Token;
@@ -84,8 +85,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
         else
         {
             _debounceTimer?.Cancel();
-            _items.Clear();
-            RaiseItemsChanged(0);
+            UpdateDisplay(string.Empty);
         }
     }
 
@@ -127,7 +127,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
 
         if (string.IsNullOrWhiteSpace(search))
         {
-            AddSingleItem("", new NoOpCommand(), "\uE94E");
+            AddSingleItem(string.Empty, new NoOpCommand(), "\uE94E");
         }
         else
         {
@@ -140,7 +140,12 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 string title = isFetching ? "Fetching rates..." : $"{amount} {from} to {to}";
                 AddSingleItem(title, new NoOpCommand(), "\uE94E");
             }
+            else
+            {
+                AddSingleItem(string.Empty, new NoOpCommand(), "\uE94E");
+            }
         }
+
         RaiseItemsChanged(_items.Count);
     }
 

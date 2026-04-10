@@ -4,9 +4,10 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:systemai="http://schemas.microsoft.com/appx/manifest/systemai/windows10"
-  IgnorableNamespaces="uap rescap systemai">
+  IgnorableNamespaces="uap uap3 rescap systemai">
 
 	<Identity
 	  Name="OthmanAMOR.55979B0A02F44"
@@ -22,8 +23,12 @@
 	</Properties>
 
 	<Dependencies>
-		<TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
-		<TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
+		<TargetDeviceFamily Name="Windows.Universal"
+							MinVersion="10.0.19041.0"
+							MaxVersionTested="10.0.26100.0" />
+		<TargetDeviceFamily Name="Windows.Desktop"
+							MinVersion="10.0.19041.0"
+							MaxVersionTested="10.0.26100.0" />
 	</Dependencies>
 
 	<Resources>
@@ -31,16 +36,14 @@
 	</Resources>
 
 	<Applications>
-		<Application Id="App"
-		  Executable="$targetnametoken$.exe"
-		  EntryPoint="$targetentrypoint$">
+		<Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
 			<uap:VisualElements
 			  DisplayName="xRate"
 			  Description="Quick Currency Converter"
 			  BackgroundColor="transparent"
 			  Square150x150Logo="Assets\Square150x150Logo.png"
 			  Square44x44Logo="Assets\Square44x44Logo.png">
-				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"  Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png"/>
+				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png"/>
 				<uap:SplashScreen Image="Assets\SplashScreen.png" />
 			</uap:VisualElements>
 			<Extensions>
@@ -49,6 +52,31 @@
 						<uap:DisplayName>xRate Protocol</uap:DisplayName>
 					</uap:Protocol>
 				</uap:Extension>
+			</Extensions>
+		</Application>
+
+		<Application Id="xRateExtension" Executable="xRateExt.exe" EntryPoint="xRateExt.App">
+			<uap:VisualElements
+			  DisplayName="xRate Extension"
+			  Description="PowerToys Command Palette Extension"
+			  BackgroundColor="transparent"
+			  Square150x150Logo="Assets\Square150x150Logo.png"
+			  Square44x44Logo="Assets\Square44x44Logo.png"
+			  AppListEntry="none"> </uap:VisualElements>
+			<Extensions>
+				<uap3:Extension Category="windows.appExtension">
+					<uap3:AppExtension Name="com.microsoft.commandpalette"
+									   Id="xrate"
+									   DisplayName="xRate">
+						<uap3:Properties>
+							<CmdPalProvider>
+								<SupportedInterfaces>
+									<Commands/>
+								</SupportedInterfaces>
+							</CmdPalProvider>
+						</uap3:Properties>
+					</uap3:AppExtension>
+				</uap3:Extension>
 			</Extensions>
 		</Application>
 	</Applications>
