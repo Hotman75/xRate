@@ -20,6 +20,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
     private string _lastSearch = string.Empty;
 
     private readonly LaunchAppCommand _launchCommand = new();
+    private readonly ListCurrenciesPage _currenciesPage = new();
 
     public xRateExtPage()
     {
@@ -43,6 +44,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
         _items.Clear();
         _settings = _settingsService.GetSettings(true);
         var launchAction = new CommandContextItem(_launchCommand);
+        var currenciesAction = new CommandContextItem(_currenciesPage);
 
         if (string.IsNullOrWhiteSpace(search))
         {
@@ -51,7 +53,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 Title = "Ready to convert",
                 Subtitle = $"Default: {_settings.DefaultFrom} to {_settings.DefaultTo}. Type an amount to start.",
                 Icon = new IconInfo("\uE94E"),
-                MoreCommands = [launchAction]
+                MoreCommands = [currenciesAction, launchAction]
             });
             RaiseItemsChanged(_items.Count);
             return;
@@ -69,7 +71,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 {
                     Title = "Waiting for input...",
                     Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [launchAction]
+                    MoreCommands = [currenciesAction, launchAction]
                 });
                 break;
 
@@ -79,7 +81,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                     Title = "Invalid amount",
                     Subtitle = "Please enter a valid number (e.g., 1 500.50)",
                     Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [launchAction]
+                    MoreCommands = [currenciesAction, launchAction]
                 });
                 break;
 
@@ -93,7 +95,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                     Title = $"Convert {amount.ToString("#,0.##", displayFormat)} {defFrom} to {defTo}",
                     Subtitle = "Press Enter to fetch rates.",
                     Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [launchAction]
+                    MoreCommands = [currenciesAction, launchAction]
                 });
                 break;
 
@@ -109,7 +111,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                     Title = $"Convert {amount.ToString("#,0.##", displayFormat)} {finalFrom} to {finalTo}",
                     Subtitle = "Press Enter to fetch rates",
                     Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [launchAction]
+                    MoreCommands = [currenciesAction, launchAction]
                 });
                 break;
         }
@@ -121,12 +123,13 @@ internal sealed partial class xRateExtPage : DynamicListPage
     {
         _items.Clear();
         var launchAction = new CommandContextItem(_launchCommand);
+        var currenciesAction = new CommandContextItem(_currenciesPage);
 
         _items.Add(new ListItem(new NoOpCommand())
         {
             Title = "Fetching rates...",
             Icon = new IconInfo("\uE94E"),
-            MoreCommands = [launchAction]
+            MoreCommands = [currenciesAction, launchAction]
         });
         RaiseItemsChanged(_items.Count);
 
@@ -158,7 +161,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                     Title = $"{formattedAmount} {from} = {formattedResult} {to}",
                     Subtitle = $"{offlineTag}Rate: 1 {from} = {formattedRate} {to}. Enter to copy.",
                     Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [launchAction]
+                    MoreCommands = [currenciesAction, launchAction]
                 });
             }
             else
@@ -168,7 +171,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                     Title = "Conversion failed",
                     Subtitle = "Offline mode requires at least one previous connection.",
                     Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [launchAction]
+                    MoreCommands = [currenciesAction, launchAction]
                 });
             }
             RaiseItemsChanged(_items.Count);
