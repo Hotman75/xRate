@@ -118,14 +118,15 @@ public sealed partial class MainWindow : Window
         UpdateInputCurrencySymbol();
 
         var cache = _currencyService.GetCachedConversion(from, to);
+        bool isCacheFresh = cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60;
+
         if (cache != null)
         {
-            UpdateRateUI(from, to, cache.Rates.FirstOrDefault()?.Rate ?? 0);
+            UpdateRateUI(from, to, cache.Rates[0].Rate);
         }
         else
         {
             RateTextBlock.Text = "...";
-            FetchLatestRate(from, to);
         }
 
         if (string.IsNullOrWhiteSpace(input) || !InputParser.TryExtractAmount(input, out double amount))
@@ -133,13 +134,18 @@ public sealed partial class MainWindow : Window
             ResultTextBlock.Text = string.Empty;
             CopyResultButton.Visibility = Visibility.Collapsed;
             _currentRawResult = string.Empty;
+
+            if (!isCacheFresh)
+            {
+                FetchLatestRate(from, to);
+            }
             return;
         }
 
-        if (cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60)
+        if (isCacheFresh)
         {
             _debounceTimer?.Cancel();
-            DisplayFinalConversion(amount, to, cache.Rates.FirstOrDefault()?.Rate ?? 0);
+            DisplayFinalConversion(amount, to, cache.Rates[0].Rate);
         }
         else
         {

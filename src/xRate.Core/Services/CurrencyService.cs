@@ -107,7 +107,6 @@ public class CurrencyService
 
                     await SaveCacheSafelyAsync(_globalCache);
 
-                    System.Diagnostics.Debug.WriteLine($"Cache refreshed at {_globalCache.LastUpdate}");
                 }
             }
         }
