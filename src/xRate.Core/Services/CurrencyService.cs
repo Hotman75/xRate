@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading;
 using Windows.Networking.Connectivity;
 using xRate.Core.Helpers;
 using xRate.Core.Models;
@@ -23,6 +24,9 @@ public class CurrencyService
 
     private readonly string _cacheFilePath;
     private GlobalCache _globalCache = new();
+    private int _isRefreshingFlag = 0;
+    private static readonly SemaphoreSlim _fileLock = new(1, 1);
+    private static readonly TimeSpan CacheExpiry = TimeSpan.FromHours(1);
 
     public CurrencyService()
     {
@@ -41,23 +45,30 @@ public class CurrencyService
         try
         {
             var json = File.ReadAllText(_cacheFilePath);
-            _globalCache = JsonSerializer.Deserialize<GlobalCache>(json) ?? new();
+            _globalCache = JsonSerializer.Deserialize(json, CurrencyContext.Default.GlobalCache) ?? new();
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"Error loading cache: {ex.Message}");
             _globalCache = new();
         }
     }
 
-    private async Task SaveCacheSafelyAsync(string json)
+    private async Task SaveCacheSafelyAsync(GlobalCache cache)
     {
+        await _fileLock.WaitAsync();
         try
         {
+            var json = JsonSerializer.Serialize(cache, CurrencyContext.Default.GlobalCache);
             await File.WriteAllTextAsync(_cacheFilePath, json);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error saving cache: {ex.Message}");
+        }
+        finally
+        {
+            _fileLock.Release();
         }
     }
 
@@ -66,28 +77,22 @@ public class CurrencyService
         try
         {
             var profile = NetworkInformation.GetInternetConnectionProfile();
-            if (profile == null) return false;
-
-            var level = profile.GetNetworkConnectivityLevel();
-            return level == NetworkConnectivityLevel.InternetAccess;
+            return profile != null && profile.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess;
         }
-        catch
-        {
-            return false;
-        }
+        catch { return false; }
     }
 
     private async Task RefreshGlobalCacheIfNeededAsync()
     {
-        if (DateTime.Now - _globalCache.LastUpdate < TimeSpan.FromHours(12)) return;
+        if (DateTime.Now - _globalCache.LastUpdate < CacheExpiry) return;
+        if (Interlocked.CompareExchange(ref _isRefreshingFlag, 1, 0) == 1) return;
 
         try
         {
             var response = await _httpClient.GetAsync("rates");
             if (response.IsSuccessStatusCode)
             {
-                var typeInfo = (JsonTypeInfo<RateResponse[]>)CurrencyContext.Default.GetTypeInfo(typeof(RateResponse[]));
-                var data = await response.Content.ReadFromJsonAsync(typeInfo);
+                var data = await response.Content.ReadFromJsonAsync(CurrencyContext.Default.RateResponseArray);
 
                 if (data != null)
                 {
@@ -97,15 +102,22 @@ public class CurrencyService
                     {
                         _globalCache.Rates[item.Quote] = item.Rate;
                     }
+
                     _globalCache.LastUpdate = DateTime.Now;
 
-                    var json = JsonSerializer.Serialize(_globalCache);
-                    await SaveCacheSafelyAsync(json);
+                    await SaveCacheSafelyAsync(_globalCache);
+
+                    System.Diagnostics.Debug.WriteLine($"Cache refreshed at {_globalCache.LastUpdate}");
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"Cache refresh failed: {ex.Message}");
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _isRefreshingFlag, 0);
         }
     }
 
@@ -128,8 +140,6 @@ public class CurrencyService
             return CalculateFromCache(baseCurrency, quoteCurrency);
         }
 
-        _ = RefreshGlobalCacheIfNeededAsync();
-
         try
         {
             var url = $"rates?base={baseCurrency}&quotes={quoteCurrency}";
@@ -137,23 +147,22 @@ public class CurrencyService
 
             if (response.IsSuccessStatusCode)
             {
-                var typeInfo = (JsonTypeInfo<RateResponse[]>)CurrencyContext.Default.GetTypeInfo(typeof(RateResponse[]));
-                var data = await response.Content.ReadFromJsonAsync(typeInfo);
+                var data = await response.Content.ReadFromJsonAsync(CurrencyContext.Default.RateResponseArray);
 
                 if (data != null)
+                {
+                    _ = RefreshGlobalCacheIfNeededAsync();
                     return new ConversionResult { Rates = data, IsOffline = false };
+                }
             }
-            else
-            {
-                return CalculateFromCache(baseCurrency, quoteCurrency);
-            }
-        }
-        catch
-        {
+
             return CalculateFromCache(baseCurrency, quoteCurrency);
         }
-
-        return CalculateFromCache(baseCurrency, quoteCurrency);
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Conversion request failed: {ex.Message}");
+            return CalculateFromCache(baseCurrency, quoteCurrency);
+        }
     }
 
     private ConversionResult? CalculateFromCache(string from, string to)

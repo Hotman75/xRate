@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using xRate.Core.Services;
 
 namespace xRate.Core.Models;
 
@@ -18,4 +19,5 @@ public class RateResponse
 }
 
 [JsonSerializable(typeof(RateResponse[]))]
+[JsonSerializable(typeof(GlobalCache))]
 public partial class CurrencyContext : JsonSerializerContext { }

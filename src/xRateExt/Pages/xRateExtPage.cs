@@ -30,7 +30,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
         this.Name = "xRate";
         this.Icon = IconHelpers.FromRelativePath("Assets\\icon.png");
         _settings = _settingsService.GetSettings(true);
-        this.PlaceholderText = "e.g. 100 USD EUR";
+        this.PlaceholderText = "Amount <From> <To> (e.g. 100 USD EUR)";
 
         UpdateDisplay(string.Empty);
     }
@@ -39,7 +39,9 @@ internal sealed partial class xRateExtPage : DynamicListPage
     {
         if (string.IsNullOrWhiteSpace(newSearch))
         {
-            UpdateDisplay(newSearch);
+            _debounceTimer?.Cancel();
+            _items.Clear();
+            RaiseItemsChanged(0);
             return;
         }
 
@@ -78,6 +80,12 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 }
                 catch (OperationCanceledException) { }
             }, token);
+        }
+        else
+        {
+            _debounceTimer?.Cancel();
+            _items.Clear();
+            RaiseItemsChanged(0);
         }
     }
 
