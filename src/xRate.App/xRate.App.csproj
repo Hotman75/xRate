@@ -16,15 +16,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Assets\SplashScreen.scale-200.png" />
-    <Content Include="Assets\Square150x150Logo.scale-200.png" />
+    <Content Include="Assets\SplashScreen.scale-200.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Square150x150Logo.scale-200.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\Square44x44Logo.scale-200.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -46,20 +52,15 @@
   <ItemGroup>
     <ProjectReference Include="..\xRate.Core\xRate.Core.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Update="Assets\Fonts\Ubuntu-Medium.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="Assets\Fonts\Ubuntu-Regular.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="Assets\StoreLogo.scale-200.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\xRateExt\xRateExt.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true">
+		<Content Include="Assets\**">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\xRateExt\xRateExt.csproj" ReferenceOutputAssembly="false">
 			<Publish>true</Publish>
+			<AdditionalProperties>SelfContained=true;Platform=$(Platform)</AdditionalProperties>
 		</ProjectReference>
 	</ItemGroup>
 

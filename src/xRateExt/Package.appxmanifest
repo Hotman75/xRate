@@ -1,5 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
@@ -11,12 +10,12 @@
 	<Identity
 	  Name="xRateExt"
 	  Publisher="CN=CA938298-1CC2-4C29-B546-D8367F20D6A1"
-	  Version="1.0.0.0" />
+	  Version="1.1.1.0" />
 
 	<Properties>
 		<DisplayName>xRate</DisplayName>
 		<PublisherDisplayName>Othman AMOR</PublisherDisplayName>
-		<Logo>Assets\icon.png</Logo>
+		<Logo>Assets\Ext_Square150x150Logo.png</Logo>
 	</Properties>
 
 	<Dependencies>
@@ -36,11 +35,22 @@
 			  DisplayName="xRate"
 			  Description="Command Palette Extension"
 			  BackgroundColor="transparent"
-			  Square150x150Logo="Assets\Square150x150Logo.png"
-			  Square44x44Logo="Assets\Square44x44Logo.png"
+			  Square150x150Logo="Assets\Ext_Square150x150Logo.png"
+			  Square44x44Logo="Assets\Ext_Square44x44Logo.png"
 			  AppListEntry="none">
-				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png"/>
-				<uap:SplashScreen Image="Assets\SplashScreen.png" />
+				<uap:DefaultTile
+				  Square71x71Logo="Assets\Ext_SmallTile.png"
+				  Wide310x150Logo="Assets\Ext_WideTile.png"
+				  Square310x310Logo="Assets\Ext_LargeTile.png"
+				  ShortName="icon-ext">
+					<uap:ShowNameOnTiles>
+						<uap:ShowOn Tile="square150x150Logo"/>
+						<uap:ShowOn Tile="wide310x150Logo"/>
+						<uap:ShowOn Tile="square310x310Logo"/>
+					</uap:ShowNameOnTiles>
+				</uap:DefaultTile>
+				<uap:SplashScreen Image="Assets\Ext_SplashScreen.png" />
+				<uap:LockScreen BadgeLogo="Assets\Ext_BadgeLogo.png" Notification="badge"/>
 			</uap:VisualElements>
 			<Extensions>
 				<com:Extension Category="windows.comServer">
@@ -50,12 +60,12 @@
 						</com:ExeServer>
 					</com:ComServer>
 				</com:Extension>
-
 				<uap3:Extension Category="windows.appExtension">
 					<uap3:AppExtension Name="com.microsoft.commandpalette"
 					  Id="xrate"
 					  DisplayName="xRate">
 						<uap3:Properties>
+							<Icon>Assets\Ext_Square44x44Logo.png</Icon>
 							<CmdPalProvider>
 								<Activation>
 									<CreateInstance ClassId="12b369dd-0fb9-43e0-a62a-41a414ffc0e7" />

@@ -12,7 +12,7 @@
 	<Identity
 	  Name="OthmanAMOR.55979B0A02F44"
 	  Publisher="CN=CA938298-1CC2-4C29-B546-D8367F20D6A1"
-	  Version="1.0.1.0" />
+	  Version="1.1.1.0" />
 
 	<mp:PhoneIdentity PhoneProductId="de75ec5b-3717-4df6-8085-9b0eac5f5105" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -62,7 +62,8 @@
 			  BackgroundColor="transparent"
 			  Square150x150Logo="Assets\Square150x150Logo.png"
 			  Square44x44Logo="Assets\Square44x44Logo.png"
-			  AppListEntry="none"> </uap:VisualElements>
+			  AppListEntry="none">
+				<uap:DefaultTile/> </uap:VisualElements>
 			<Extensions>
 				<uap3:Extension Category="windows.appExtension">
 					<uap3:AppExtension Name="com.microsoft.commandpalette"

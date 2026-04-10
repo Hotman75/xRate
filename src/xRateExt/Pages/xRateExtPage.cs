@@ -28,7 +28,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
     public xRateExtPage()
     {
         this.Name = "xRate";
-        this.Icon = IconHelpers.FromRelativePath("Assets\\icon.png");
+        this.Icon = IconHelpers.FromRelativePath("Assets\\Ext_icon.png");
         _settings = _settingsService.GetSettings(true);
         this.PlaceholderText = "Amount <From> <To> (e.g. 100 USD EUR)";
 
