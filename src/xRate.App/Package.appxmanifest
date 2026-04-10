@@ -69,6 +69,7 @@
 									   Id="xrate"
 									   DisplayName="xRate">
 						<uap3:Properties>
+							<Icon>Assets\icon.png</Icon>
 							<CmdPalProvider>
 								<SupportedInterfaces>
 									<Commands/>
