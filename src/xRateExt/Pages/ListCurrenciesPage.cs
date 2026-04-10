@@ -1,5 +1,6 @@
 using Microsoft.CommandPalette.Extensions;
 using Microsoft.CommandPalette.Extensions.Toolkit;
+using System.Collections.Generic;
 using System.Linq;
 using xRate.Core.Helpers;
 
@@ -12,9 +13,17 @@ internal sealed partial class ListCurrenciesPage : ListPage
     public ListCurrenciesPage()
     {
         this.Name = "Supported Currencies";
-        this.Icon = new IconInfo("\uE12A");
 
-        _items = CurrencyMapper.SupportedCurrencies
+        this.Icon = new IconInfo("\uE825");
+
+        var headerItem = new ListItem(new NoOpCommand())
+        {
+            Title = "Name",
+            Subtitle = "ISO Code  ·  Symbol (if supported)",
+            Icon = new IconInfo("\uE946")
+        };
+
+        var currencyItems = CurrencyMapper.SupportedCurrencies
             .Select(entry =>
             {
                 var dashIndex = entry.IndexOf(" - ");
@@ -36,11 +45,14 @@ internal sealed partial class ListCurrenciesPage : ListPage
                 return (IListItem)new ListItem(new CopyTextCommand(iso) { Name = "Copy ISO Code" })
                 {
                     Title = name,
-                    Subtitle = subtitle,
-                    Icon = new IconInfo("\uE1D0"),
+                    Subtitle = subtitle
                 };
-            })
-            .ToArray();
+            });
+
+        var allItems = new List<IListItem> { headerItem };
+        allItems.AddRange(currencyItems);
+
+        _items = allItems.ToArray();
     }
 
     public override IListItem[] GetItems() => _items;
