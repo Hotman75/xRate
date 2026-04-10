@@ -13,13 +13,12 @@ internal sealed partial class ListCurrenciesPage : ListPage
     public ListCurrenciesPage()
     {
         this.Name = "Supported Currencies";
-
         this.Icon = new IconInfo("\uE825");
 
         var headerItem = new ListItem(new NoOpCommand())
         {
-            Title = "Name",
-            Subtitle = "ISO Code  ·  Symbol",
+            Title = "ISO",
+            Subtitle = "Name · Symbol",
             Icon = new IconInfo("\uE946")
         };
 
@@ -34,17 +33,18 @@ internal sealed partial class ListCurrenciesPage : ListPage
                 string symbol = "";
                 var parenOpen = rest.LastIndexOf('(');
                 var parenClose = rest.LastIndexOf(')');
+
                 if (parenOpen >= 0 && parenClose > parenOpen)
                 {
                     symbol = rest.Substring(parenOpen + 1, parenClose - parenOpen - 1);
                     name = rest.Substring(0, parenOpen).TrimEnd();
                 }
 
-                var subtitle = string.IsNullOrEmpty(symbol) ? iso : $"{iso}  ·  {symbol}";
+                var subtitle = string.IsNullOrEmpty(symbol) ? name : $"{name} · {symbol}";
 
                 return (IListItem)new ListItem(new CopyTextCommand(iso) { Name = "Copy ISO Code" })
                 {
-                    Title = name,
+                    Title = iso,
                     Subtitle = subtitle
                 };
             });
