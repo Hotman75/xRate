@@ -38,13 +38,23 @@ public sealed partial class MainWindow : Window
 
         _currencyService = new CurrencyService();
         _settingsService = new SettingsService();
-        _settings = _settingsService.GetSettings();
+
+        _settings = _settingsService.GetSettings(true);
 
         LoadCurrencies();
         _isInitializing = false;
 
         UpdateInputCurrencySymbol();
         TriggerConversion();
+
+        this.Activated += MainWindow_Activated;
+    }
+
+    private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
+    {
+        _settings = _settingsService.GetSettings(true);
+
+        CheckDefaultStatus();
     }
 
     private void SetHandCursor(UIElement element)

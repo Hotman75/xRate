@@ -37,6 +37,8 @@ internal sealed partial class xRateExtPage : DynamicListPage
 
     public override void UpdateSearchText(string oldSearch, string newSearch)
     {
+        _settings = _settingsService.GetSettings(true);
+
         if (string.IsNullOrWhiteSpace(newSearch))
         {
             _debounceTimer?.Cancel();
