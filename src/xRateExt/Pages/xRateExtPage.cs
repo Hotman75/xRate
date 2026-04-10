@@ -113,7 +113,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 _items.Add(new ListItem(new ConvertCommand(() => _ = PerformConversionAsync(amount, finalFrom, finalTo)))
                 {
                     Title = $"Convert {amount.ToString("#,0.##", displayFormat)} {finalFrom} to {finalTo}",
-                    Subtitle = "Press Enter to fetch live rates",
+                    Subtitle = "Press Enter to fetch rates",
                     Icon = new IconInfo("\uE94E")
                 });
                 break;

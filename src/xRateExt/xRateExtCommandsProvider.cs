@@ -20,7 +20,6 @@ public partial class xRateExtCommandsProvider : CommandProvider
             new ListItem(new xRateExtPage())
             {
                 Title = "xRate",
-                Subtitle = "Quick Convert",
                 Icon = icon
             }
         ];
