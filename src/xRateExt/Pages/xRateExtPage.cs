@@ -1,5 +1,6 @@
 using Microsoft.CommandPalette.Extensions;
 using Microsoft.CommandPalette.Extensions.Toolkit;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -18,26 +19,17 @@ internal sealed partial class xRateExtPage : DynamicListPage
     private UserSettings _settings;
     private string _lastSearch = string.Empty;
 
+    private readonly LaunchAppCommand _launchCommand = new();
+
     public xRateExtPage()
     {
         this.Name = "xRate";
         this.Icon = IconHelpers.FromRelativePath("Assets\\icon.png");
 
         _settings = _settingsService.GetSettings(true);
-
         this.PlaceholderText = "Ex: 100 | 100 € $ | 100 EUR USD";
 
         RefreshList(string.Empty);
-    }
-
-    private void AddStaticLaunchItem()
-    {
-        _items.Add(new ListItem(new LaunchAppCommand())
-        {
-            Title = "Open xRate App",
-            Subtitle = "Launch the desktop application",
-            Icon = this.Icon
-        });
     }
 
     public override void UpdateSearchText(string oldSearch, string newSearch)
@@ -49,8 +41,8 @@ internal sealed partial class xRateExtPage : DynamicListPage
     private void RefreshList(string search)
     {
         _items.Clear();
-
         _settings = _settingsService.GetSettings(true);
+        var launchAction = new CommandContextItem(_launchCommand);
 
         if (string.IsNullOrWhiteSpace(search))
         {
@@ -58,9 +50,9 @@ internal sealed partial class xRateExtPage : DynamicListPage
             {
                 Title = "Ready to convert",
                 Subtitle = $"Default: {_settings.DefaultFrom} to {_settings.DefaultTo}. Type an amount to start.",
-                Icon = new IconInfo("\uE94E")
+                Icon = new IconInfo("\uE94E"),
+                MoreCommands = [launchAction]
             });
-            AddStaticLaunchItem();
             RaiseItemsChanged(_items.Count);
             return;
         }
@@ -76,7 +68,8 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 _items.Add(new ListItem(new NoOpCommand())
                 {
                     Title = "Waiting for input...",
-                    Icon = new IconInfo("\uE94E")
+                    Icon = new IconInfo("\uE94E"),
+                    MoreCommands = [launchAction]
                 });
                 break;
 
@@ -85,54 +78,56 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 {
                     Title = "Invalid amount",
                     Subtitle = "Please enter a valid number (e.g., 1 500.50)",
-                    Icon = new IconInfo("\uE94E")
+                    Icon = new IconInfo("\uE94E"),
+                    MoreCommands = [launchAction]
                 });
                 break;
 
             case ParseResult.AmountOnly:
                 string defFrom = _settings.DefaultFrom;
                 string defTo = _settings.DefaultTo;
+                var cmdAmt = new ConvertCommand(() => _ = PerformConversionAsync(amount, defFrom, defTo)) { Name = "Convert" };
 
-                _items.Add(new ListItem(new ConvertCommand(() => _ = PerformConversionAsync(amount, defFrom, defTo)))
+                _items.Add(new ListItem(cmdAmt)
                 {
                     Title = $"Convert {amount.ToString("#,0.##", displayFormat)} {defFrom} to {defTo}",
                     Subtitle = "Press Enter to fetch rates.",
-                    Icon = new IconInfo("\uE94E")
+                    Icon = new IconInfo("\uE94E"),
+                    MoreCommands = [launchAction]
                 });
                 break;
 
             case ParseResult.Success:
                 string finalFrom = CurrencyMapper.Normalize(fromRaw);
-
-                string finalTo = string.IsNullOrWhiteSpace(toRaw)
-                    ? _settings.DefaultTo
-                    : CurrencyMapper.Normalize(toRaw);
-
+                string finalTo = string.IsNullOrWhiteSpace(toRaw) ? _settings.DefaultTo : CurrencyMapper.Normalize(toRaw);
                 if (string.IsNullOrEmpty(finalFrom)) finalFrom = _settings.DefaultFrom;
 
-                _items.Add(new ListItem(new ConvertCommand(() => _ = PerformConversionAsync(amount, finalFrom, finalTo)))
+                var cmdSuccess = new ConvertCommand(() => _ = PerformConversionAsync(amount, finalFrom, finalTo)) { Name = "Convert" };
+
+                _items.Add(new ListItem(cmdSuccess)
                 {
                     Title = $"Convert {amount.ToString("#,0.##", displayFormat)} {finalFrom} to {finalTo}",
                     Subtitle = "Press Enter to fetch rates",
-                    Icon = new IconInfo("\uE94E")
+                    Icon = new IconInfo("\uE94E"),
+                    MoreCommands = [launchAction]
                 });
                 break;
         }
 
-        AddStaticLaunchItem();
         RaiseItemsChanged(_items.Count);
     }
 
     private async Task PerformConversionAsync(double amount, string from, string to)
     {
         _items.Clear();
+        var launchAction = new CommandContextItem(_launchCommand);
+
         _items.Add(new ListItem(new NoOpCommand())
         {
             Title = "Fetching rates...",
-            Icon = new IconInfo("\uE94E")
+            Icon = new IconInfo("\uE94E"),
+            MoreCommands = [launchAction]
         });
-
-        AddStaticLaunchItem();
         RaiseItemsChanged(_items.Count);
 
         var response = await _apiService.GetConversionAsync(from, to);
@@ -153,16 +148,17 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 string formattedResult = finalResult.ToString("N2", displayFormat);
                 string formattedAmount = amount.ToString("#,0.##", displayFormat);
                 string formattedRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
-
                 string rawCopyValue = finalResult.ToString("F2", CultureInfo.InvariantCulture);
-
                 string offlineTag = (response != null && response.IsOffline) ? "[Offline] " : "";
 
-                _items.Add(new ListItem(new CopyTextCommand(rawCopyValue))
+                var copyCmd = new CopyTextCommand(rawCopyValue) { Name = "Copy Result" };
+
+                _items.Add(new ListItem(copyCmd)
                 {
                     Title = $"{formattedAmount} {from} = {formattedResult} {to}",
                     Subtitle = $"{offlineTag}Rate: 1 {from} = {formattedRate} {to}. Enter to copy.",
-                    Icon = new IconInfo("\uE94E")
+                    Icon = new IconInfo("\uE94E"),
+                    MoreCommands = [launchAction]
                 });
             }
             else
@@ -170,12 +166,11 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 _items.Add(new ListItem(new NoOpCommand())
                 {
                     Title = "Conversion failed",
-                    Subtitle = "Offline mode requires at least one previous connection to cache rates.",
-                    Icon = new IconInfo("\uE94E")
+                    Subtitle = "Offline mode requires at least one previous connection.",
+                    Icon = new IconInfo("\uE94E"),
+                    MoreCommands = [launchAction]
                 });
             }
-
-            AddStaticLaunchItem();
             RaiseItemsChanged(_items.Count);
         }
     }
