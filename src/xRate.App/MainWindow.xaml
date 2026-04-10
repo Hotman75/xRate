@@ -7,133 +7,100 @@
     </Window.SystemBackdrop>
 
     <Grid RequestedTheme="Dark" Background="#1C1C1C">
-
-        <Grid.Resources>
-            <Style x:Key="IconButton" TargetType="Button">
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="Padding" Value="8"/>
-            </Style>
-        </Grid.Resources>
-        
         <Grid.RowDefinitions>
             <RowDefinition Height="45" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <Grid x:Name="AppTitleBar" Grid.Row="0" Background="Transparent">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
             <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center" Spacing="10">
                 <Image Source="Assets/icon.png" Width="18" Height="18" />
                 <TextBlock Text="xRate" FontSize="12" Foreground="Gray" VerticalAlignment="Center" />
             </StackPanel>
         </Grid>
 
-        <Grid Grid.Row="1" Padding="20">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid Padding="30,10,30,30">
+                <StackPanel MaxWidth="380" HorizontalAlignment="Stretch" VerticalAlignment="Top" Spacing="12">
 
-            <StackPanel MaxWidth="380" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,15,0,0" Spacing="20">
+                    <TextBlock Text="xRate" FontSize="28" FontFamily="{StaticResource UbuntuMedium}" FontWeight="Medium"
+                        CharacterSpacing="-30" HorizontalAlignment="Center" Margin="0,0,0,5">
+                        <TextBlock.Foreground>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#FFFFFF" Offset="0.3" />
+                                <GradientStop Color="#A0A0A0" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </TextBlock.Foreground>
+                    </TextBlock>
 
-                <TextBlock Text="xRate" FontSize="32" FontFamily="{StaticResource UbuntuMedium}" FontWeight="Medium"
-                    CharacterSpacing="-30" HorizontalAlignment="Center" Margin="0,0,0,15">
-                    <TextBlock.Foreground>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Color="#FFFFFF" Offset="0.3" />
-                            <GradientStop Color="#EBEBEB" Offset="1.0" />
-                        </LinearGradientBrush>
-                    </TextBlock.Foreground>
-                </TextBlock>
-
-                <Grid RowDefinitions="Auto, Auto">
-                    <TextBlock Grid.Row="0" Text="Amount" FontSize="14" Foreground="LightGray" Margin="5,0,0,5" />
-                    <TextBox Grid.Row="1" x:Name="AmountTextBox" PlaceholderText="Enter amount..."
-                        HorizontalAlignment="Stretch" KeyDown="AmountTextBox_KeyDown" GotFocus="AmountTextBox_GotFocus" />
-                </Grid>
-
-                <StackPanel Spacing="5">
-                    <Grid>
+                    <Grid Margin="0,5">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="From" FontSize="14" Foreground="LightGray"
-                            Margin="5,0,0,5" />
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="To" FontSize="14" Foreground="LightGray"
-                            Margin="5,0,0,5" />
+                        <TextBox x:Name="AmountTextBox" Grid.Column="0" FontSize="16" FontWeight="SemiBold"
+                            TextAlignment="Left" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                            Background="Transparent" BorderThickness="0,0,0,1" BorderBrush="#22FFFFFF"
+                            Padding="10,8,0,8" PlaceholderText="" TextChanged="AmountTextBox_TextChanged"
+                            GotFocus="AmountTextBox_GotFocus" />
 
-                        <ComboBox Grid.Row="1" Grid.Column="0" x:Name="FromComboBox" HorizontalAlignment="Stretch"
+                        <TextBlock x:Name="InputCurrencySymbol" Grid.Column="1" FontSize="16" FontWeight="SemiBold"
+                            Foreground="#808080" VerticalAlignment="Center" Margin="10,0,5,0" />
+                    </Grid>
+
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="60" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <ComboBox x:Name="FromComboBox" Grid.Column="0" HorizontalAlignment="Stretch" FontSize="14"
                             SelectionChanged="OnCurrencySelectionChanged" />
 
-                        <Button Grid.Row="1" Grid.Column="1" x:Name="SwapButton" 
-                                HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                Background="Transparent" BorderThickness="0"
-                                Click="SwapButton_Click"
-                                ToolTipService.ToolTip="Swap currencies">
+                        <Button x:Name="SwapButton" Grid.Column="1" HorizontalAlignment="Center"
+                            VerticalAlignment="Center" Background="Transparent" BorderThickness="0"
+                            Click="SwapButton_Click">
                             <SymbolIcon Symbol="Sync" Foreground="#0078D4" />
                         </Button>
 
-                        <ComboBox Grid.Row="1" Grid.Column="2" x:Name="ToComboBox" HorizontalAlignment="Stretch"
+                        <ComboBox x:Name="ToComboBox" Grid.Column="2" HorizontalAlignment="Stretch" FontSize="14"
                             SelectionChanged="OnCurrencySelectionChanged" />
                     </Grid>
 
-                    <Button x:Name="SetDefaultButton" 
-                            Content="Set as default" 
-                            Click="SetDefaultButton_Click"
-                            Background="Transparent" 
-                            BorderThickness="0" 
-                            Foreground="Gray" 
-                            FontSize="12"
-                            HorizontalAlignment="Center" 
-                            Visibility="Collapsed"
-                            ToolTipService.ToolTip="Saves these currencies as your default pair for the app and the Command Palette extension." />
+                    <Button x:Name="SetDefaultButton" Content="Set as default Currencies" Click="SetDefaultButton_Click"
+                        Background="Transparent" BorderThickness="0" Foreground="Gray" FontSize="12"
+                        HorizontalAlignment="Center" Visibility="Collapsed" />
+
+                    <Border x:Name="ResultBorder" Visibility="Visible" Background="#15FFFFFF" CornerRadius="10"
+                        Padding="15" Margin="0,5,0,0" MinHeight="56">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock x:Name="ResultTextBlock" Grid.Column="0" FontSize="16" FontWeight="SemiBold"
+                                VerticalAlignment="Center" Foreground="#0078D4" TextWrapping="Wrap" />
+
+                            <Button x:Name="CopyResultButton" Grid.Column="1" Background="Transparent"
+                                BorderThickness="0" Margin="10,0,0,0" Click="CopyResultButton_Click"
+                                VerticalAlignment="Center" Visibility="Collapsed">
+                                <SymbolIcon Symbol="Copy" Foreground="Gray" />
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="RateBorder" Visibility="Visible" Background="#0AFFFFFF" CornerRadius="8"
+                        Padding="15,10" BorderBrush="#15FFFFFF" BorderThickness="1">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock x:Name="RateTextBlock" Grid.Column="0" FontSize="14" Foreground="#EBEBEB"
+                                FontWeight="Medium" VerticalAlignment="Center" />
+
+                            <Button x:Name="CopyRateButton" Grid.Column="1" Background="Transparent" BorderThickness="0"
+                                Click="CopyRateButton_Click" VerticalAlignment="Center" Visibility="Collapsed">
+                                <SymbolIcon Symbol="Copy" Foreground="Gray" />
+                            </Button>
+                        </Grid>
+                    </Border>
                 </StackPanel>
-
-                <Button x:Name="ConvertButton" Content="Convert" Click="ConvertButton_Click"
-                    HorizontalAlignment="Stretch" Height="48" FontSize="16" FontWeight="Bold" Foreground="White"
-                    BorderThickness="0" CornerRadius="8" Margin="0,10,0,0">
-                    <Button.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#004578" Offset="0.0" />
-                            <GradientStop Color="#0078D4" Offset="0.5" />
-                            <GradientStop Color="#2B88D8" Offset="1.0" />
-                        </LinearGradientBrush>
-                    </Button.Background>
-                </Button>
-
-                <Border x:Name="ResultBorder" Visibility="Visible" Opacity="1.0" MinHeight="80" Background="#15FFFFFF"
-                    CornerRadius="12" Padding="20">
-                    <Grid ColumnDefinitions="*, Auto">
-
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock x:Name="ResultTextBlock" FontSize="17" FontWeight="Medium" TextAlignment="Center"
-                                Foreground="#7FDBFF" TextWrapping="Wrap" Text="Ready to convert" />
-
-                            <TextBlock x:Name="RateTextBlock" FontSize="12" Foreground="Gray" TextAlignment="Center"
-                                Margin="0,4,0,0" Visibility="Collapsed" TextWrapping="Wrap" />
-
-                            <TextBlock x:Name="OfflineWarningTextBlock" FontSize="11" Foreground="#FFA500"
-                                TextAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed" TextWrapping="Wrap" />
-                        </StackPanel>
-
-                        <Button x:Name="CopyButton" Grid.Column="1" 
-                                Background="Transparent" BorderThickness="0"
-                                Margin="10,0,0,0" Click="CopyButton_Click" 
-                                VerticalAlignment="Center"
-                                ToolTipService.ToolTip="Copy result to clipboard">
-                            <SymbolIcon Symbol="Copy" Foreground="Gray" />
-                        </Button>
-                    </Grid>
-                </Border>
-            </StackPanel>
-        </Grid>
+            </Grid>
+        </ScrollViewer>
     </Grid>
 </Window>
