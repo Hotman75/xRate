@@ -172,4 +172,22 @@ public class CurrencyService
         }
         return null;
     }
+
+    public ConversionResult? GetCachedConversion(string from, string to)
+    {
+        var baseCurrency = from.ToUpper().Trim();
+        var quoteCurrency = to.ToUpper().Trim();
+
+        if (baseCurrency == quoteCurrency)
+        {
+            return new ConversionResult
+            {
+                Rates = [new RateResponse { Rate = 1.0, Quote = quoteCurrency }],
+                IsOffline = true,
+                OfflineDate = DateTime.Now
+            };
+        }
+
+        return CalculateFromCache(baseCurrency, quoteCurrency);
+    }
 }

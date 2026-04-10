@@ -19,7 +19,7 @@ internal sealed partial class ListCurrenciesPage : ListPage
         var headerItem = new ListItem(new NoOpCommand())
         {
             Title = "Name",
-            Subtitle = "ISO Code  ·  Symbol (if supported)",
+            Subtitle = "ISO Code  ·  Symbol",
             Icon = new IconInfo("\uE946")
         };
 

@@ -4,8 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using xRate.Core.Helpers;
+using xRate.Core.Models;
 using xRate.Core.Services;
 using xRateExt.Helpers;
 
@@ -17,7 +19,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
     private readonly CurrencyService _apiService = new();
     private readonly SettingsService _settingsService = new();
     private UserSettings _settings;
-    private string _lastSearch = string.Empty;
+    private CancellationTokenSource? _debounceTimer;
 
     private readonly LaunchAppCommand _launchCommand = new();
     private readonly ListCurrenciesPage _currenciesPage = new();
@@ -27,158 +29,128 @@ internal sealed partial class xRateExtPage : DynamicListPage
     {
         this.Name = "xRate";
         this.Icon = IconHelpers.FromRelativePath("Assets\\icon.png");
-
         _settings = _settingsService.GetSettings(true);
-        this.PlaceholderText = "Ex: 100 | 100 € $ | 100 EUR USD";
+        this.PlaceholderText = "e.g. 100 USD EUR";
 
-        RefreshList(string.Empty);
+        UpdateDisplay(string.Empty);
     }
 
     public override void UpdateSearchText(string oldSearch, string newSearch)
     {
-        _lastSearch = newSearch;
-        RefreshList(newSearch);
-    }
-
-    private void RefreshList(string search)
-    {
-        _items.Clear();
-        _settings = _settingsService.GetSettings(true);
-        var launchAction = new CommandContextItem(_launchCommand);
-        var currenciesAction = new CommandContextItem(_currenciesPage);
-        var settingsAction = new CommandContextItem(_settingsPage);
-
-        if (string.IsNullOrWhiteSpace(search))
+        if (string.IsNullOrWhiteSpace(newSearch))
         {
-            _items.Add(new ListItem(new NoOpCommand())
-            {
-                Title = "Ready to convert",
-                Subtitle = "Type an amount to start.",
-                Icon = new IconInfo("\uE94E"),
-                MoreCommands = [currenciesAction, settingsAction, launchAction]
-            });
-            RaiseItemsChanged(_items.Count);
+            UpdateDisplay(newSearch);
             return;
         }
 
-        var parseStatus = InputParser.TryParse(search, out double amount, out string fromRaw, out string toRaw);
+        var parseStatus = InputParser.TryParse(newSearch, out double amount, out string fromRaw, out string toRaw);
+        if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly)
+        {
+            string from = string.IsNullOrEmpty(fromRaw) ? _settings.DefaultFrom : CurrencyMapper.Normalize(fromRaw);
+            string to = string.IsNullOrWhiteSpace(toRaw) ? _settings.DefaultTo : CurrencyMapper.Normalize(toRaw);
+
+            var cache = _apiService.GetCachedConversion(from, to);
+
+            if (cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60)
+            {
+                _debounceTimer?.Cancel();
+                DisplayFinalLayout(amount, from, to, cache);
+                return;
+            }
+
+            UpdateDisplay(newSearch, isFetching: true);
+            _debounceTimer?.Cancel();
+            _debounceTimer = new CancellationTokenSource();
+            var token = _debounceTimer.Token;
+
+            _ = Task.Run(async () => {
+                try
+                {
+                    await Task.Delay(400, token);
+                    if (!token.IsCancellationRequested)
+                    {
+                        var result = await _apiService.GetConversionAsync(from, to);
+                        if (!token.IsCancellationRequested && result != null)
+                        {
+                            DisplayFinalLayout(amount, from, to, result);
+                        }
+                    }
+                }
+                catch (OperationCanceledException) { }
+            }, token);
+        }
+    }
+
+    private void DisplayFinalLayout(double amount, string from, string to, ConversionResult result)
+    {
+        var rateInfo = result.Rates?.FirstOrDefault();
+        if (rateInfo == null) return;
+
+        double rate = rateInfo.Rate;
+        double finalValue = amount * rate;
 
         var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
         displayFormat.NumberGroupSeparator = " ";
 
-        switch (parseStatus)
-        {
-            case ParseResult.Incomplete:
-                _items.Add(new ListItem(new NoOpCommand())
-                {
-                    Title = "Waiting for input...",
-                    Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [currenciesAction, settingsAction, launchAction]
-                });
-                break;
+        string formattedResult = finalValue.ToString("N2", displayFormat);
+        string formattedRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
 
-            case ParseResult.InvalidAmount:
-                _items.Add(new ListItem(new NoOpCommand())
-                {
-                    Title = "Invalid amount",
-                    Subtitle = "Please enter a valid number (e.g., 1 500.50)",
-                    Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [currenciesAction, settingsAction, launchAction]
-                });
-                break;
+        _items.Clear();
 
-            case ParseResult.AmountOnly:
-                string defFrom = _settings.DefaultFrom;
-                string defTo = _settings.DefaultTo;
-                var cmdAmt = new ConvertCommand(() => _ = PerformConversionAsync(amount, defFrom, defTo)) { Name = "Convert" };
+        AddSingleItem(
+            $"{formattedResult} {to}",
+            new CopyTextCommand(finalValue.ToString("F2", CultureInfo.InvariantCulture)) { Name = "Copy Result" },
+            "\uE94E"
+        );
 
-                _items.Add(new ListItem(cmdAmt)
-                {
-                    Title = $"Convert {amount.ToString("#,0.##", displayFormat)} {defFrom} to {defTo}",
-                    Subtitle = "Press Enter to fetch rates.",
-                    Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [currenciesAction, settingsAction, launchAction]
-                });
-                break;
-
-            case ParseResult.Success:
-                string finalFrom = CurrencyMapper.Normalize(fromRaw);
-                string finalTo = string.IsNullOrWhiteSpace(toRaw) ? _settings.DefaultTo : CurrencyMapper.Normalize(toRaw);
-                if (string.IsNullOrEmpty(finalFrom)) finalFrom = _settings.DefaultFrom;
-
-                var cmdSuccess = new ConvertCommand(() => _ = PerformConversionAsync(amount, finalFrom, finalTo)) { Name = "Convert" };
-
-                _items.Add(new ListItem(cmdSuccess)
-                {
-                    Title = $"Convert {amount.ToString("#,0.##", displayFormat)} {finalFrom} to {finalTo}",
-                    Subtitle = "Press Enter to fetch rates",
-                    Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [currenciesAction, settingsAction, launchAction]
-                });
-                break;
-        }
+        AddSingleItem(
+            $"1 {from} = {formattedRate} {to}",
+            new CopyTextCommand(formattedRate) { Name = "Copy Rate" },
+            "\uE8EF"
+        );
 
         RaiseItemsChanged(_items.Count);
     }
 
-    private async Task PerformConversionAsync(double amount, string from, string to)
+    private void UpdateDisplay(string search, bool isFetching = false)
     {
         _items.Clear();
-        var launchAction = new CommandContextItem(_launchCommand);
-        var currenciesAction = new CommandContextItem(_currenciesPage);
-        var settingsAction = new CommandContextItem(_settingsPage);
+        _settings = _settingsService.GetSettings(true);
 
-        _items.Add(new ListItem(new NoOpCommand())
+        if (string.IsNullOrWhiteSpace(search))
         {
-            Title = "Fetching rates...",
-            Icon = new IconInfo("\uE94E"),
-            MoreCommands = [currenciesAction, settingsAction, launchAction]
-        });
-        RaiseItemsChanged(_items.Count);
-
-        var response = await _apiService.GetConversionAsync(from, to);
-
-        if (_items.Count > 0 && _items[0].Title == "Fetching rates...")
-        {
-            _items.Clear();
-            var rateInfo = response?.Rates?.FirstOrDefault();
-
-            if (rateInfo != null)
-            {
-                double rate = rateInfo.Rate;
-                double finalResult = amount * rate;
-
-                var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
-                displayFormat.NumberGroupSeparator = " ";
-
-                string formattedResult = finalResult.ToString("N2", displayFormat);
-                string formattedAmount = amount.ToString("#,0.##", displayFormat);
-                string formattedRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
-                string rawCopyValue = finalResult.ToString("F2", CultureInfo.InvariantCulture);
-                string offlineTag = (response != null && response.IsOffline) ? "[Offline] " : "";
-
-                var copyCmd = new CopyTextCommand(rawCopyValue) { Name = "Copy Result" };
-
-                _items.Add(new ListItem(copyCmd)
-                {
-                    Title = $"{formattedAmount} {from} = {formattedResult} {to}",
-                    Subtitle = $"{offlineTag}Rate: 1 {from} = {formattedRate} {to}. Enter to copy.",
-                    Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [currenciesAction, settingsAction, launchAction]
-                });
-            }
-            else
-            {
-                _items.Add(new ListItem(new NoOpCommand())
-                {
-                    Title = "Conversion failed",
-                    Subtitle = "Offline mode requires at least one previous connection.",
-                    Icon = new IconInfo("\uE94E"),
-                    MoreCommands = [currenciesAction, settingsAction, launchAction]
-                });
-            }
-            RaiseItemsChanged(_items.Count);
+            AddSingleItem("", new NoOpCommand(), "\uE94E");
         }
+        else
+        {
+            var parseStatus = InputParser.TryParse(search, out double amount, out string fromRaw, out string toRaw);
+            if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly)
+            {
+                string from = string.IsNullOrEmpty(fromRaw) ? _settings.DefaultFrom : CurrencyMapper.Normalize(fromRaw);
+                string to = string.IsNullOrWhiteSpace(toRaw) ? _settings.DefaultTo : CurrencyMapper.Normalize(toRaw);
+
+                string title = isFetching ? "Fetching rates..." : $"{amount} {from} to {to}";
+                AddSingleItem(title, new NoOpCommand(), "\uE94E");
+            }
+        }
+        RaiseItemsChanged(_items.Count);
+    }
+
+    private void AddSingleItem(string title, ICommand cmd, string iconGlyph)
+    {
+        var moreCommands = new IContextItem[] {
+            new CommandContextItem(_currenciesPage),
+            new CommandContextItem(_settingsPage),
+            new CommandContextItem(_launchCommand)
+        };
+
+        _items.Add(new ListItem(cmd)
+        {
+            Title = title,
+            Subtitle = string.Empty,
+            Icon = new IconInfo(iconGlyph),
+            MoreCommands = moreCommands
+        });
     }
 
     public override IListItem[] GetItems() => _items.ToArray();
