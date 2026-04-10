@@ -53,7 +53,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
             _items.Add(new ListItem(new NoOpCommand())
             {
                 Title = "Ready to convert",
-                Subtitle = $"Default: {_settings.DefaultFrom} to {_settings.DefaultTo}. Type an amount to start.",
+                Subtitle = "Type an amount to start.",
                 Icon = new IconInfo("\uE94E"),
                 MoreCommands = [currenciesAction, settingsAction, launchAction]
             });

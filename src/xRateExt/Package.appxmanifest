@@ -54,8 +54,7 @@
 				<uap3:Extension Category="windows.appExtension">
 					<uap3:AppExtension Name="com.microsoft.commandpalette"
 					  Id="xrate"
-					  DisplayName="xRate"
-					  Description="Quick Convert">
+					  DisplayName="xRate">
 						<uap3:Properties>
 							<CmdPalProvider>
 								<Activation>

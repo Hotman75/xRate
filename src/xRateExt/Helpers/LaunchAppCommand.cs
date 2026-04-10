@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using Microsoft.CommandPalette.Extensions;
 using Microsoft.CommandPalette.Extensions.Toolkit;
-using Microsoft.Win32;
+using Windows.System;
 
 namespace xRateExt.Helpers;
 
@@ -16,43 +16,25 @@ internal sealed class LaunchAppCommand : InvokableCommand
 
     public override ICommandResult Invoke()
     {
-        bool isAppInstalled = false;
+        var xrateUri = new Uri("xrate://");
+
+        var supportStatus = Launcher
+            .QueryUriSupportAsync(xrateUri, LaunchQuerySupportType.Uri)
+            .GetAwaiter()
+            .GetResult();
 
         try
         {
-            using var key = Registry.ClassesRoot.OpenSubKey("xrate");
-            if (key != null)
-            {
-                using var commandKey = key.OpenSubKey(@"shell\open\command");
-                if (commandKey?.GetValue(null) is string command && !string.IsNullOrEmpty(command))
-                {
-                    var exePath = command.Trim('"').Split('"')[0];
-                    isAppInstalled = System.IO.File.Exists(exePath);
-                }
-            }
+            if (supportStatus == LaunchQuerySupportStatus.Available)
+                Launcher.LaunchUriAsync(xrateUri);
+            else
+                Launcher.LaunchUriAsync(new Uri("ms-windows-store://pdp/?ProductId=9NM38WVXBCRQ"));
         }
         catch
-        {
-            isAppInstalled = false;
-        }
-
-        try
-        {
-            if (isAppInstalled)
-            {
-                Process.Start(new ProcessStartInfo("xrate://") { UseShellExecute = true });
-            }
-            else
-            {
-                Process.Start(new ProcessStartInfo("ms-windows-store://pdp/?ProductId=9NM38WVXBCRQ") { UseShellExecute = true });
-            }
-        }
-        catch (Exception ex)
         {
             Process.Start(new ProcessStartInfo("https://apps.microsoft.com/detail/9NM38WVXBCRQ") { UseShellExecute = true });
         }
 
         return CommandResult.Dismiss();
     }
-
 }
