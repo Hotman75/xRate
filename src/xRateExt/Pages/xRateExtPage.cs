@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.System;
 using xRate.Core.Helpers;
 using xRate.Core.Models;
 using xRate.Core.Services;
@@ -24,6 +25,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
     private readonly LaunchAppCommand _launchCommand = new();
     private readonly ListCurrenciesPage _currenciesPage = new();
     private readonly SettingsPage _settingsPage = new();
+    private readonly CurrencyService _currencyService = new();
 
     public xRateExtPage()
     {
@@ -145,7 +147,37 @@ internal sealed partial class xRateExtPage : DynamicListPage
 
         if (string.IsNullOrWhiteSpace(search))
         {
-            AddSingleItem(string.Empty, new NoOpCommand(), "\uE94E");
+            AddSingleItem("Enter Amount...", new NoOpCommand(), "\uE8EF");
+
+            string from = _settings.DefaultFrom;
+            string to = _settings.DefaultTo;
+
+            var cache = _currencyService.GetCachedConversion(from, to);
+            bool isCacheFresh = cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60;
+
+            if (cache != null && cache.Rates != null && cache.Rates.Any())
+            {
+                double rate = cache.Rates[0].Rate;
+                var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
+                displayFormat.NumberGroupSeparator = " ";
+
+                string formattedRate = rate.ToString("N4", displayFormat);
+
+                AddSingleItem(
+                    $"1 {from} = {formattedRate} {to}",
+                    new CopyTextCommand(rate.ToString("F4", CultureInfo.InvariantCulture)) { Name = "Copy Rate" },
+                    "\uE94E"
+                );
+            }
+            else
+            {
+                AddSingleItem($"1 {from} = ... {to}", new NoOpCommand(), "\uE94E");
+            }
+
+            if (!isCacheFresh)
+            {
+                FetchLatestRate(from, to);
+            }
         }
         else
         {
@@ -165,7 +197,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
             }
             else
             {
-                AddSingleItem(string.Empty, new NoOpCommand(), "\uE94E");
+                AddSingleItem("Amount Error", new NoOpCommand(), "\uE783");
             }
         }
 
@@ -187,6 +219,32 @@ internal sealed partial class xRateExtPage : DynamicListPage
             Icon = new IconInfo(iconGlyph),
             MoreCommands = moreCommands
         });
+    }
+
+    private void FetchLatestRate(string from, string to)
+    {
+        _debounceTimer?.Cancel();
+        _debounceTimer = new CancellationTokenSource();
+        var token = _debounceTimer.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(400, token);
+
+                if (!token.IsCancellationRequested)
+                {
+                    var result = await _currencyService.GetConversionAsync(from, to);
+
+                    if (!token.IsCancellationRequested && result != null)
+                    {
+                        UpdateDisplay(string.Empty);
+                    }
+                }
+            }
+            catch (OperationCanceledException) { }
+        }, token);
     }
 
     public override IListItem[] GetItems() => _items.ToArray();
