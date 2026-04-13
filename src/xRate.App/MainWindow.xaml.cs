@@ -142,6 +142,7 @@ public sealed partial class MainWindow : Window
         if (string.IsNullOrWhiteSpace(input) || !InputParser.TryExtractAmount(input, out double amount))
         {
             ResultTextBlock.Text = string.Empty;
+            ResultSubtitleTextBlock.Visibility = Visibility.Collapsed;
             CopyResultButton.Visibility = Visibility.Collapsed;
             _currentRawResult = string.Empty;
 
@@ -155,12 +156,13 @@ public sealed partial class MainWindow : Window
         if (isCacheFresh)
         {
             _debounceTimer?.Cancel();
-            DisplayFinalConversion(amount, to, cache.Rates[0].Rate);
+            DisplayFinalConversion(amount, from, to, cache.Rates[0].Rate);
         }
         else
         {
             ResultTextBlock.Text = "...";
-            FetchLatestRate(from, to, amount);
+            ResultSubtitleTextBlock.Visibility = Visibility.Collapsed;
+            FetchLatestRate(from, to, amount, input);
         }
     }
 
@@ -172,18 +174,26 @@ public sealed partial class MainWindow : Window
         CopyRateButton.Visibility = Visibility.Visible;
     }
 
-    private void DisplayFinalConversion(double amount, string to, double rate)
+    private void DisplayFinalConversion(double amount, string from, string to, double rate)
     {
         double finalValue = amount * rate;
         var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
         displayFormat.NumberGroupSeparator = " ";
 
+        string formattedFinal = finalValue.ToString("N2", displayFormat);
+        string formattedAmount = amount.ToString(CultureInfo.InvariantCulture);
+
         _currentRawResult = finalValue.ToString("F2", CultureInfo.InvariantCulture);
-        ResultTextBlock.Text = $"{finalValue.ToString("N2", displayFormat)} {to}";
+
+        ResultTextBlock.Text = $"{formattedFinal} {to}";
+
+        ResultSubtitleTextBlock.Text = $"{formattedAmount} {from} = {formattedFinal} {to}";
+        ResultSubtitleTextBlock.Visibility = Visibility.Visible;
+
         CopyResultButton.Visibility = Visibility.Visible;
     }
 
-    private void FetchLatestRate(string from, string to, double? amount = null)
+    private void FetchLatestRate(string from, string to, double? amount = null, string rawInput = "")
     {
         _debounceTimer?.Cancel();
         _debounceTimer = new CancellationTokenSource();
@@ -206,7 +216,7 @@ public sealed partial class MainWindow : Window
 
                             if (amount.HasValue)
                             {
-                                DisplayFinalConversion(amount.Value, to, rate);
+                                DisplayFinalConversion(amount.Value, from, to, rate);
                             }
                         }
                     });

@@ -76,8 +76,13 @@
                     <Border x:Name="ResultBorder" Visibility="Visible" Background="#15FFFFFF" CornerRadius="10"
                         Padding="15" Margin="0,5,0,0" MinHeight="56">
                         <Grid ColumnDefinitions="*, Auto">
-                            <TextBlock x:Name="ResultTextBlock" Grid.Column="0" FontSize="16" FontWeight="SemiBold"
-                                VerticalAlignment="Center" Foreground="#0078D4" TextWrapping="Wrap" />
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                                <TextBlock x:Name="ResultTextBlock" FontSize="16" FontWeight="SemiBold"
+                                    Foreground="#0078D4" TextWrapping="Wrap" />
+
+                                <TextBlock x:Name="ResultSubtitleTextBlock" FontSize="12" Foreground="Gray"
+                                    Visibility="Collapsed" TextWrapping="Wrap" />
+                            </StackPanel>
 
                             <Button x:Name="CopyResultButton" Grid.Column="1" Background="Transparent"
                                 BorderThickness="0" Margin="10,0,0,0" Click="CopyResultButton_Click"

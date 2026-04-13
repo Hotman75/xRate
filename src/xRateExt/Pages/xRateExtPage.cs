@@ -46,7 +46,11 @@ internal sealed partial class xRateExtPage : DynamicListPage
             return;
         }
 
-        var parseStatus = InputParser.TryParse(newSearch, out double amount, out string fromRaw, out string toRaw);
+        double amount = 0;
+        string fromRaw = string.Empty;
+        string toRaw = string.Empty;
+
+        var parseStatus = InputParser.TryParse(newSearch, out amount, out fromRaw, out toRaw);
 
         if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly)
         {
@@ -105,12 +109,15 @@ internal sealed partial class xRateExtPage : DynamicListPage
         string formattedResult = finalValue.ToString("N2", displayFormat);
         string formattedRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
 
+        string conversionSubtitle = $"{amount.ToString(CultureInfo.InvariantCulture)} {from} = {formattedResult} {to}";
+
         _items.Clear();
 
         AddSingleItem(
             $"{formattedResult} {to}",
             new CopyTextCommand(finalValue.ToString("F2", CultureInfo.InvariantCulture)) { Name = "Copy Result" },
-            "\uE94E"
+            "\uE94E",
+            conversionSubtitle
         );
 
         AddSingleItem(
@@ -133,13 +140,18 @@ internal sealed partial class xRateExtPage : DynamicListPage
         }
         else
         {
-            var parseStatus = InputParser.TryParse(search, out double amount, out string fromRaw, out string toRaw);
+            double amount = 0;
+            string fromRaw = string.Empty;
+            string toRaw = string.Empty;
+
+            var parseStatus = InputParser.TryParse(search, out amount, out fromRaw, out toRaw);
+
             if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly)
             {
                 string from = string.IsNullOrEmpty(fromRaw) ? _settings.DefaultFrom : CurrencyMapper.Normalize(fromRaw);
                 string to = string.IsNullOrWhiteSpace(toRaw) ? _settings.DefaultTo : CurrencyMapper.Normalize(toRaw);
 
-                string title = isFetching ? "Fetching rates..." : $"{amount} {from} to {to}";
+                string title = isFetching ? "..." : $"{amount} {from} to {to}";
                 AddSingleItem(title, new NoOpCommand(), "\uE94E");
             }
             else
@@ -151,7 +163,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
         RaiseItemsChanged(_items.Count);
     }
 
-    private void AddSingleItem(string title, ICommand cmd, string iconGlyph)
+    private void AddSingleItem(string title, ICommand cmd, string iconGlyph, string subtitle = "")
     {
         var moreCommands = new IContextItem[] {
             new CommandContextItem(_currenciesPage),
@@ -162,7 +174,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
         _items.Add(new ListItem(cmd)
         {
             Title = title,
-            Subtitle = string.Empty,
+            Subtitle = subtitle,
             Icon = new IconInfo(iconGlyph),
             MoreCommands = moreCommands
         });
