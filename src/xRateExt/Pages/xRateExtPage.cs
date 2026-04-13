@@ -52,6 +52,15 @@ internal sealed partial class xRateExtPage : DynamicListPage
 
         var parseStatus = InputParser.TryParse(newSearch, out amount, out fromRaw, out toRaw);
 
+        if (parseStatus == ParseResult.InvalidAmount)
+        {
+            _debounceTimer?.Cancel();
+            _items.Clear();
+            AddSingleItem("Amount too high", new NoOpCommand(), "\uE783");
+            RaiseItemsChanged(_items.Count);
+            return;
+        }
+
         if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly)
         {
             string from = string.IsNullOrEmpty(fromRaw) ? _settings.DefaultFrom : CurrencyMapper.Normalize(fromRaw);
@@ -106,10 +115,10 @@ internal sealed partial class xRateExtPage : DynamicListPage
         var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
         displayFormat.NumberGroupSeparator = " ";
 
+        string formattedAmount = amount.ToString("N2", displayFormat);
         string formattedResult = finalValue.ToString("N2", displayFormat);
-        string formattedRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
 
-        string conversionSubtitle = $"{amount.ToString(CultureInfo.InvariantCulture)} {from} = {formattedResult} {to}";
+        string formattedRate = rate.ToString("N4", displayFormat);
 
         _items.Clear();
 
@@ -117,12 +126,12 @@ internal sealed partial class xRateExtPage : DynamicListPage
             $"{formattedResult} {to}",
             new CopyTextCommand(finalValue.ToString("F2", CultureInfo.InvariantCulture)) { Name = "Copy Result" },
             "\uE94E",
-            conversionSubtitle
+            $"{formattedAmount} {from} = {formattedResult} {to}"
         );
 
         AddSingleItem(
             $"1 {from} = {formattedRate} {to}",
-            new CopyTextCommand(formattedRate) { Name = "Copy Rate" },
+            new CopyTextCommand(rate.ToString("F4", CultureInfo.InvariantCulture)) { Name = "Copy Rate" },
             "\uE8EF"
         );
 
