@@ -130,26 +130,21 @@ public sealed partial class MainWindow : Window
         var cache = _currencyService.GetCachedConversion(from, to);
         bool isCacheFresh = cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60;
 
-        if (cache != null)
+        if (cache != null) UpdateRateUI(from, to, cache.Rates[0].Rate);
+        else RateTextBlock.Text = "...";
+
+        var parseStatus = InputParser.TryParse(input, out double amount, out _, out _);
+
+        if (parseStatus == ParseResult.InvalidAmount)
         {
-            UpdateRateUI(from, to, cache.Rates[0].Rate);
-        }
-        else
-        {
-            RateTextBlock.Text = "...";
+            ShowErrorState("Amount too high");
+            return;
         }
 
-        if (string.IsNullOrWhiteSpace(input) || !InputParser.TryExtractAmount(input, out double amount))
+        if (string.IsNullOrWhiteSpace(input) || parseStatus == ParseResult.Incomplete)
         {
-            ResultTextBlock.Text = string.Empty;
-            ResultSubtitleTextBlock.Visibility = Visibility.Collapsed;
-            CopyResultButton.Visibility = Visibility.Collapsed;
-            _currentRawResult = string.Empty;
-
-            if (!isCacheFresh)
-            {
-                FetchLatestRate(from, to);
-            }
+            ShowEmptyState();
+            if (!isCacheFresh) FetchLatestRate(from, to);
             return;
         }
 
@@ -161,16 +156,19 @@ public sealed partial class MainWindow : Window
         else
         {
             ResultTextBlock.Text = "...";
-            ResultSubtitleTextBlock.Visibility = Visibility.Collapsed;
-            FetchLatestRate(from, to, amount, input);
+            FetchLatestRate(from, to, amount);
         }
     }
 
     private void UpdateRateUI(string from, string to, double rate)
     {
         if (rate <= 0) return;
+
+        var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
+        displayFormat.NumberGroupSeparator = " ";
+
         _currentRawRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
-        RateTextBlock.Text = $"1 {from} = {_currentRawRate} {to}";
+        RateTextBlock.Text = $"1 {from} = {rate.ToString("N4", displayFormat)} {to}";
         CopyRateButton.Visibility = Visibility.Visible;
     }
 
@@ -181,19 +179,20 @@ public sealed partial class MainWindow : Window
         displayFormat.NumberGroupSeparator = " ";
 
         string formattedFinal = finalValue.ToString("N2", displayFormat);
-        string formattedAmount = amount.ToString(CultureInfo.InvariantCulture);
+        string formattedAmount = amount.ToString("N2", displayFormat);
 
         _currentRawResult = finalValue.ToString("F2", CultureInfo.InvariantCulture);
 
         ResultTextBlock.Text = $"{formattedFinal} {to}";
-
         ResultSubtitleTextBlock.Text = $"{formattedAmount} {from} = {formattedFinal} {to}";
-        ResultSubtitleTextBlock.Visibility = Visibility.Visible;
 
+        ResultSubtitleTextBlock.Visibility = Visibility.Visible;
+        ResultContentPanel.Visibility = Visibility.Visible;
+        EmptyStatePanel.Visibility = Visibility.Collapsed;
         CopyResultButton.Visibility = Visibility.Visible;
     }
 
-    private void FetchLatestRate(string from, string to, double? amount = null, string rawInput = "")
+    private void FetchLatestRate(string from, string to, double? amount = null)
     {
         _debounceTimer?.Cancel();
         _debounceTimer = new CancellationTokenSource();
@@ -214,10 +213,8 @@ public sealed partial class MainWindow : Window
                             double rate = result.Rates[0].Rate;
                             UpdateRateUI(from, to, rate);
 
-                            if (amount.HasValue)
-                            {
-                                DisplayFinalConversion(amount.Value, from, to, rate);
-                            }
+                            if (amount.HasValue) DisplayFinalConversion(amount.Value, from, to, rate);
+                            else if (!string.IsNullOrWhiteSpace(AmountTextBox.Text)) TriggerConversion();
                         }
                     });
                 }
@@ -269,4 +266,23 @@ public sealed partial class MainWindow : Window
     }
 
     private void AmountTextBox_GotFocus(object sender, RoutedEventArgs e) => AmountTextBox?.SelectAll();
+
+    private void ShowEmptyState()
+    {
+        EmptyStatePanel.Visibility = Visibility.Visible;
+        ResultContentPanel.Visibility = Visibility.Collapsed;
+        CopyResultButton.Visibility = Visibility.Collapsed;
+        _currentRawResult = string.Empty;
+    }
+
+    private void ShowErrorState(string message)
+    {
+        EmptyStatePanel.Visibility = Visibility.Collapsed;
+        ResultContentPanel.Visibility = Visibility.Visible;
+
+        ResultTextBlock.Text = message;
+        ResultSubtitleTextBlock.Visibility = Visibility.Collapsed;
+        CopyResultButton.Visibility = Visibility.Collapsed;
+        _currentRawResult = string.Empty;
+    }
 }

@@ -42,7 +42,7 @@
                         <TextBox x:Name="AmountTextBox" Grid.Column="0" FontSize="16" FontWeight="SemiBold"
                             TextAlignment="Left" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                             Background="Transparent" BorderThickness="0,0,0,1" BorderBrush="#22FFFFFF"
-                            Padding="10,8,0,8" PlaceholderText="" TextChanged="AmountTextBox_TextChanged"
+                            Padding="10,8,0,8" PlaceholderText="Amount..." TextChanged="AmountTextBox_TextChanged"
                             GotFocus="AmountTextBox_GotFocus" />
 
                         <TextBlock x:Name="InputCurrencySymbol" Grid.Column="1" FontSize="16" FontWeight="SemiBold"
@@ -74,14 +74,17 @@
                         HorizontalAlignment="Center" Visibility="Collapsed" />
 
                     <Border x:Name="ResultBorder" Visibility="Visible" Background="#15FFFFFF" CornerRadius="10"
-                        Padding="15" Margin="0,5,0,0" MinHeight="56">
+                        Padding="15" Margin="0,5,0,0" MinHeight="70">
                         <Grid ColumnDefinitions="*, Auto">
-                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
-                                <TextBlock x:Name="ResultTextBlock" FontSize="16" FontWeight="SemiBold"
-                                    Foreground="#0078D4" TextWrapping="Wrap" />
 
-                                <TextBlock x:Name="ResultSubtitleTextBlock" FontSize="12" Foreground="Gray"
-                                    Visibility="Collapsed" TextWrapping="Wrap" />
+                            <StackPanel x:Name="EmptyStatePanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10" Opacity="0.4">
+                                <SymbolIcon Symbol="Calculator" />
+                                <TextBlock Text="Enter an amount..." FontSize="14" FontStyle="Italic" />
+                            </StackPanel>
+
+                            <StackPanel x:Name="ResultContentPanel" Grid.Column="0" VerticalAlignment="Center" Spacing="2" Visibility="Collapsed">
+                                <TextBlock x:Name="ResultTextBlock" FontSize="16" FontWeight="SemiBold" Foreground="#0078D4" TextWrapping="Wrap" />
+                                <TextBlock x:Name="ResultSubtitleTextBlock" FontSize="12" Foreground="Gray" Visibility="Collapsed" TextWrapping="Wrap" />
                             </StackPanel>
 
                             <Button x:Name="CopyResultButton" Grid.Column="1" Background="Transparent"
