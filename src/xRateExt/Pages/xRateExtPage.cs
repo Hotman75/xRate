@@ -63,7 +63,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
             return;
         }
 
-        if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly)
+        if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly || parseStatus == ParseResult.CurrencyOnly)
         {
             string from = string.IsNullOrEmpty(fromRaw) ? _settings.DefaultFrom : CurrencyMapper.Normalize(fromRaw);
             string to = string.IsNullOrWhiteSpace(toRaw) ? _settings.DefaultTo : CurrencyMapper.Normalize(toRaw);
@@ -187,7 +187,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
 
             var parseStatus = InputParser.TryParse(search, out amount, out fromRaw, out toRaw);
 
-            if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly)
+            if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly || parseStatus == ParseResult.CurrencyOnly)
             {
                 string from = string.IsNullOrEmpty(fromRaw) ? _settings.DefaultFrom : CurrencyMapper.Normalize(fromRaw);
                 string to = string.IsNullOrWhiteSpace(toRaw) ? _settings.DefaultTo : CurrencyMapper.Normalize(toRaw);

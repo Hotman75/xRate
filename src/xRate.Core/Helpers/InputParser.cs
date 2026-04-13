@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace xRate.Core.Helpers;
 
-public enum ParseResult { Incomplete, InvalidAmount, AmountOnly, Success }
+public enum ParseResult { Incomplete, InvalidAmount, AmountOnly, CurrencyOnly, Success }
 
 public static class InputParser
 {
@@ -19,18 +19,30 @@ public static class InputParser
         string mathPart = match.Success ? input.Substring(0, match.Index).Trim() : input.Trim();
         string currencyPart = match.Success ? input.Substring(match.Index).Trim() : string.Empty;
 
-        if (!MathEvaluator.TryEvaluate(mathPart, out amount)) return ParseResult.InvalidAmount;
-        if (Math.Abs(amount) > 1_000_000_000_000) return ParseResult.InvalidAmount;
+        bool hasMath = !string.IsNullOrWhiteSpace(mathPart);
 
-        if (string.IsNullOrEmpty(currencyPart)) return ParseResult.AmountOnly;
+        if (hasMath)
+        {
+            if (!MathEvaluator.TryEvaluate(mathPart, out amount)) return ParseResult.InvalidAmount;
+            if (Math.Abs(amount) > 1_000_000_000_000) return ParseResult.InvalidAmount;
+        }
+        else
+        {
+            amount = 1;
+        }
+
+        if (string.IsNullOrEmpty(currencyPart)) return hasMath ? ParseResult.AmountOnly : ParseResult.Incomplete;
 
         int index = 0;
         from = ExtractNextCurrency(currencyPart, ref index);
-        if (string.IsNullOrEmpty(from)) return ParseResult.AmountOnly;
+
+        if (string.IsNullOrEmpty(from)) return hasMath ? ParseResult.AmountOnly : ParseResult.Incomplete;
 
         string remaining = currencyPart.Substring(index).Trim();
         index = 0;
         to = ExtractNextCurrency(remaining, ref index);
+
+        if (!hasMath) return string.IsNullOrEmpty(to) ? ParseResult.CurrencyOnly : ParseResult.Success;
 
         return string.IsNullOrEmpty(to) ? ParseResult.AmountOnly : ParseResult.Success;
     }

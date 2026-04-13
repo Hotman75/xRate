@@ -24,6 +24,7 @@ public sealed partial class MainWindow : Window
 
     private bool _isSwapping = false;
     private bool _isInitializing = true;
+    private bool _isUpdatingCombos = false;
     private CancellationTokenSource? _debounceTimer;
 
     public MainWindow()
@@ -35,6 +36,7 @@ public sealed partial class MainWindow : Window
         SetHandCursor(CopyResultButton);
         SetHandCursor(CopyRateButton);
         SetHandCursor(SetDefaultButton);
+        SetHandCursor(ResetDefaultButton);
 
         _currencyService = new CurrencyService();
         _settingsService = new SettingsService();
@@ -91,6 +93,8 @@ public sealed partial class MainWindow : Window
 
     private void OnCurrencySelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (_isUpdatingCombos) return;
+
         UpdateInputCurrencySymbol();
         CheckDefaultStatus();
         TriggerConversion();
@@ -121,19 +125,11 @@ public sealed partial class MainWindow : Window
     {
         if (_isInitializing || _isSwapping) return;
 
-        string from = CurrencyMapper.Normalize(FromComboBox.SelectedItem?.ToString() ?? _settings.DefaultFrom);
-        string to = CurrencyMapper.Normalize(ToComboBox.SelectedItem?.ToString() ?? _settings.DefaultTo);
+        string comboFrom = CurrencyMapper.Normalize(FromComboBox.SelectedItem?.ToString() ?? _settings.DefaultFrom);
+        string comboTo = CurrencyMapper.Normalize(ToComboBox.SelectedItem?.ToString() ?? _settings.DefaultTo);
         string input = AmountTextBox.Text;
 
-        UpdateInputCurrencySymbol();
-
-        var cache = _currencyService.GetCachedConversion(from, to);
-        bool isCacheFresh = cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60;
-
-        if (cache != null) UpdateRateUI(from, to, cache.Rates[0].Rate);
-        else RateTextBlock.Text = "...";
-
-        var parseStatus = InputParser.TryParse(input, out double amount, out _, out _);
+        var parseStatus = InputParser.TryParse(input, out double amount, out string fromRaw, out string toRaw);
 
         if (parseStatus == ParseResult.InvalidAmount)
         {
@@ -144,19 +140,46 @@ public sealed partial class MainWindow : Window
         if (string.IsNullOrWhiteSpace(input) || parseStatus == ParseResult.Incomplete)
         {
             ShowEmptyState();
-            if (!isCacheFresh) FetchLatestRate(from, to);
+            UpdateInputCurrencySymbol();
+
+            var cacheEmpty = _currencyService.GetCachedConversion(comboFrom, comboTo);
+            if (cacheEmpty == null) FetchLatestRate(comboFrom, comboTo);
+            else UpdateRateUI(comboFrom, comboTo, cacheEmpty.Rates[0].Rate);
             return;
         }
+
+        string finalFrom = string.IsNullOrEmpty(fromRaw) ? comboFrom : fromRaw;
+        string finalTo = string.IsNullOrEmpty(toRaw) ? comboTo : toRaw;
+
+        if (finalFrom != comboFrom || finalTo != comboTo)
+        {
+            _isUpdatingCombos = true;
+
+            if (finalFrom != comboFrom) SelectCurrencyInCombo(FromComboBox, finalFrom);
+            if (finalTo != comboTo) SelectCurrencyInCombo(ToComboBox, finalTo);
+
+            _isUpdatingCombos = false;
+
+            CheckDefaultStatus();
+        }
+
+        InputCurrencySymbol.Text = finalFrom;
+
+        var cache = _currencyService.GetCachedConversion(finalFrom, finalTo);
+        bool isCacheFresh = cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60;
+
+        if (cache != null) UpdateRateUI(finalFrom, finalTo, cache.Rates[0].Rate);
+        else RateTextBlock.Text = "...";
 
         if (isCacheFresh)
         {
             _debounceTimer?.Cancel();
-            DisplayFinalConversion(amount, from, to, cache.Rates[0].Rate);
+            DisplayFinalConversion(amount, finalFrom, finalTo, cache.Rates[0].Rate);
         }
         else
         {
             ResultTextBlock.Text = "...";
-            FetchLatestRate(from, to, amount);
+            FetchLatestRate(finalFrom, finalTo, amount);
         }
     }
 
@@ -225,12 +248,12 @@ public sealed partial class MainWindow : Window
 
     private void CheckDefaultStatus()
     {
-        if (FromComboBox?.SelectedItem == null || ToComboBox?.SelectedItem == null || SetDefaultButton == null) return;
+        if (FromComboBox?.SelectedItem == null || ToComboBox?.SelectedItem == null || DefaultActionsPanel == null) return;
 
         string currentFrom = CurrencyMapper.Normalize(FromComboBox.SelectedItem.ToString());
         string currentTo = CurrencyMapper.Normalize(ToComboBox.SelectedItem.ToString());
 
-        SetDefaultButton.Visibility = (currentFrom != _settings.DefaultFrom || currentTo != _settings.DefaultTo)
+        DefaultActionsPanel.Visibility = (currentFrom != _settings.DefaultFrom || currentTo != _settings.DefaultTo)
             ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -242,7 +265,20 @@ public sealed partial class MainWindow : Window
         _settings.DefaultTo = CurrencyMapper.Normalize(ToComboBox.SelectedItem.ToString());
 
         await _settingsService.SaveSettingsAsync(_settings);
-        SetDefaultButton.Visibility = Visibility.Collapsed;
+        DefaultActionsPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void ResetDefaultButton_Click(object sender, RoutedEventArgs e)
+    {
+        _isUpdatingCombos = true;
+
+        SelectCurrencyInCombo(FromComboBox, _settings.DefaultFrom);
+        SelectCurrencyInCombo(ToComboBox, _settings.DefaultTo);
+
+        _isUpdatingCombos = false;
+
+        CheckDefaultStatus();
+        TriggerConversion();
     }
 
     private void CopyResultButton_Click(object sender, RoutedEventArgs e)

@@ -69,9 +69,25 @@
                             SelectionChanged="OnCurrencySelectionChanged" />
                     </Grid>
 
-                    <Button x:Name="SetDefaultButton" Content="Set as default Currencies" Click="SetDefaultButton_Click"
-                        Background="Transparent" BorderThickness="0" Foreground="Gray" FontSize="12"
-                        HorizontalAlignment="Center" Visibility="Collapsed" />
+                    <StackPanel x:Name="DefaultActionsPanel" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="20" Visibility="Collapsed" Margin="0,5">
+
+                        <Button x:Name="ResetDefaultButton" Click="ResetDefaultButton_Click"
+                            Background="Transparent" BorderThickness="0" Foreground="Gray" Padding="5">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <SymbolIcon Symbol="Undo" />
+                                <TextBlock Text="Reset" FontSize="12" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="SetDefaultButton" Click="SetDefaultButton_Click"
+                            Background="Transparent" BorderThickness="0" Foreground="Gray" Padding="5">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <SymbolIcon Symbol="Save" />
+                                <TextBlock Text="Save as default" FontSize="12" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                    </StackPanel>
 
                     <Border x:Name="ResultBorder" Visibility="Visible" Background="#15FFFFFF" CornerRadius="10"
                         Padding="15" Margin="0,5,0,0" MinHeight="70">
