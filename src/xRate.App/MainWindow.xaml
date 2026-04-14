@@ -34,19 +34,11 @@
                     </TextBlock>
 
                     <Grid Margin="0,5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <TextBox x:Name="AmountTextBox" Grid.Column="0" FontSize="16" FontWeight="SemiBold"
+                        <TextBox x:Name="AmountTextBox" FontSize="16" FontWeight="SemiBold"
                             TextAlignment="Left" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                             Background="Transparent" BorderThickness="0,0,0,1" BorderBrush="#22FFFFFF"
                             Padding="10,8,0,8" PlaceholderText="Amount..." TextChanged="AmountTextBox_TextChanged"
                             GotFocus="AmountTextBox_GotFocus" />
-
-                        <TextBlock x:Name="InputCurrencySymbol" Grid.Column="1" FontSize="16" FontWeight="SemiBold"
-                            Foreground="#808080" VerticalAlignment="Center" Margin="10,0,5,0" />
                     </Grid>
 
                     <Grid Margin="0,5">
@@ -61,7 +53,7 @@
 
                         <Button x:Name="SwapButton" Grid.Column="1" HorizontalAlignment="Center"
                             VerticalAlignment="Center" Background="Transparent" BorderThickness="0"
-                            Click="SwapButton_Click">
+                            Click="SwapButton_Click" ToolTipService.ToolTip="Swap Currencies">
                             <SymbolIcon Symbol="Sync" Foreground="#0078D4" />
                         </Button>
 
@@ -69,22 +61,18 @@
                             SelectionChanged="OnCurrencySelectionChanged" />
                     </Grid>
 
-                    <StackPanel x:Name="DefaultActionsPanel" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="20" Visibility="Collapsed" Margin="0,5">
+                    <StackPanel x:Name="DefaultActionsPanel" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="15" Visibility="Collapsed" Margin="0,5">
 
                         <Button x:Name="ResetDefaultButton" Click="ResetDefaultButton_Click"
-                            Background="Transparent" BorderThickness="0" Foreground="Gray" Padding="5">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <SymbolIcon Symbol="Undo" />
-                                <TextBlock Text="Reset Currencies" FontSize="11" VerticalAlignment="Center" />
-                            </StackPanel>
+                            Background="Transparent" BorderThickness="0" Foreground="Gray" Padding="5"
+                            ToolTipService.ToolTip="Reset Currencies">
+                            <SymbolIcon Symbol="Undo" />
                         </Button>
 
                         <Button x:Name="SetDefaultButton" Click="SetDefaultButton_Click"
-                            Background="Transparent" BorderThickness="0" Foreground="Gray" Padding="5">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <SymbolIcon Symbol="Save" />
-                                <TextBlock Text="Save as default Currencies" FontSize="11" VerticalAlignment="Center" />
-                            </StackPanel>
+                            Background="Transparent" BorderThickness="0" Foreground="Gray" Padding="5"
+                            ToolTipService.ToolTip="Save as default Currencies">
+                            <SymbolIcon Symbol="Save" />
                         </Button>
 
                     </StackPanel>
@@ -95,7 +83,7 @@
 
                             <StackPanel x:Name="EmptyStatePanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10" Opacity="0.4">
                                 <SymbolIcon Symbol="Calculator" />
-                                <TextBlock Text="Enter an amount..." FontSize="14" FontStyle="Italic" />
+                                <TextBlock Text="Enter Amount..." FontSize="14" FontStyle="Italic" />
                             </StackPanel>
 
                             <StackPanel x:Name="ResultContentPanel" Grid.Column="0" VerticalAlignment="Center" Spacing="2" Visibility="Collapsed">
@@ -105,7 +93,7 @@
 
                             <Button x:Name="CopyResultButton" Grid.Column="1" Background="Transparent"
                                 BorderThickness="0" Margin="10,0,0,0" Click="CopyResultButton_Click"
-                                VerticalAlignment="Center" Visibility="Collapsed">
+                                VerticalAlignment="Center" Visibility="Collapsed" ToolTipService.ToolTip="Copy Result">
                                 <SymbolIcon Symbol="Copy" Foreground="Gray" />
                             </Button>
                         </Grid>
@@ -117,17 +105,16 @@
 
                             <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
                                 <TextBlock x:Name="RateTextBlock" FontSize="14" Foreground="#EBEBEB" FontWeight="Medium" />
-
                                 <TextBlock x:Name="RateSubtitleTextBlock" FontSize="12" Foreground="Gray" Visibility="Collapsed" />
                             </StackPanel>
 
                             <Button x:Name="CopyRateButton" Grid.Column="1" Background="Transparent" BorderThickness="0"
-                                Click="CopyRateButton_Click" VerticalAlignment="Center" Visibility="Collapsed">
+                                Click="CopyRateButton_Click" VerticalAlignment="Center" Visibility="Collapsed" ToolTipService.ToolTip="Copy Rate">
                                 <SymbolIcon Symbol="Copy" Foreground="Gray" />
                             </Button>
                         </Grid>
                     </Border>
-                    
+
                 </StackPanel>
             </Grid>
         </ScrollViewer>

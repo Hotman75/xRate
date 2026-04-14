@@ -46,7 +46,6 @@ public sealed partial class MainWindow : Window
         LoadCurrencies();
         _isInitializing = false;
 
-        UpdateInputCurrencySymbol();
         TriggerConversion();
 
         this.Activated += MainWindow_Activated;
@@ -55,7 +54,6 @@ public sealed partial class MainWindow : Window
     private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
         _settings = _settingsService.GetSettings(true);
-
         CheckDefaultStatus();
     }
 
@@ -95,7 +93,6 @@ public sealed partial class MainWindow : Window
     {
         if (_isUpdatingCombos) return;
 
-        UpdateInputCurrencySymbol();
         CheckDefaultStatus();
         TriggerConversion();
     }
@@ -108,17 +105,8 @@ public sealed partial class MainWindow : Window
         ToComboBox.SelectedItem = temp;
         _isSwapping = false;
 
-        UpdateInputCurrencySymbol();
         CheckDefaultStatus();
         TriggerConversion();
-    }
-
-    private void UpdateInputCurrencySymbol()
-    {
-        if (FromComboBox.SelectedItem != null && InputCurrencySymbol != null)
-        {
-            InputCurrencySymbol.Text = CurrencyMapper.Normalize(FromComboBox.SelectedItem.ToString());
-        }
     }
 
     private void TriggerConversion()
@@ -140,7 +128,6 @@ public sealed partial class MainWindow : Window
         if (string.IsNullOrWhiteSpace(input) || parseStatus == ParseResult.Incomplete)
         {
             ShowEmptyState();
-            UpdateInputCurrencySymbol();
 
             var cacheEmpty = _currencyService.GetCachedConversion(comboFrom, comboTo);
             if (cacheEmpty == null) FetchLatestRate(comboFrom, comboTo);
@@ -162,8 +149,6 @@ public sealed partial class MainWindow : Window
 
             CheckDefaultStatus();
         }
-
-        InputCurrencySymbol.Text = finalFrom;
 
         var cache = _currencyService.GetCachedConversion(finalFrom, finalTo);
         bool isCacheFresh = cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60;
@@ -295,7 +280,6 @@ public sealed partial class MainWindow : Window
         if (match.Success)
         {
             string cleanMath = input.Substring(0, match.Index).Trim();
-
             AmountTextBox.Text = cleanMath;
         }
         else
