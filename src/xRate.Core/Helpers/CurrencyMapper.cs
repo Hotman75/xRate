@@ -116,7 +116,7 @@ public static class CurrencyMapper
             string iso = c.Substring(0, 3);
             if (reverseSymbolMap.TryGetValue(iso, out var symbols))
             {
-                return $"{c} ({symbols})";
+                return $"{c} · {symbols}";
             }
             return c;
         }).ToList();

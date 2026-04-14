@@ -15,11 +15,9 @@ public static class InputParser
         amount = 0; from = string.Empty; to = string.Empty;
         if (string.IsNullOrWhiteSpace(input)) return ParseResult.Incomplete;
 
-        var match = Regex.Match(input, @"[a-zA-Z\p{Sc}]");
-        string mathPart = match.Success ? input.Substring(0, match.Index).Trim() : input.Trim();
-        string currencyPart = match.Success ? input.Substring(match.Index).Trim() : string.Empty;
+        string mathPart = Regex.Replace(input, @"[a-zA-Z\p{Sc}]+", " ").Trim();
 
-        bool hasMath = !string.IsNullOrWhiteSpace(mathPart);
+        bool hasMath = !string.IsNullOrWhiteSpace(mathPart) && mathPart.Any(char.IsDigit);
 
         if (hasMath)
         {
@@ -31,16 +29,37 @@ public static class InputParser
             amount = 1;
         }
 
-        if (string.IsNullOrEmpty(currencyPart)) return hasMath ? ParseResult.AmountOnly : ParseResult.Incomplete;
+        string currencyPart = Regex.Replace(input, @"[^a-zA-Z\p{Sc}]+", " ").Trim();
 
-        int index = 0;
-        from = ExtractNextCurrency(currencyPart, ref index);
+        if (!string.IsNullOrWhiteSpace(currencyPart))
+        {
+            while (!string.IsNullOrWhiteSpace(currencyPart) && string.IsNullOrEmpty(to))
+            {
+                int index = 0;
+                string found = ExtractNextCurrency(currencyPart, ref index);
+
+                if (!string.IsNullOrEmpty(found))
+                {
+                    if (string.IsNullOrEmpty(from))
+                    {
+                        from = found;
+                    }
+                    else if (!string.Equals(found, from, StringComparison.OrdinalIgnoreCase))
+                    {
+                        to = found;
+                    }
+                    currencyPart = currencyPart.Substring(index).Trim();
+                }
+                else
+                {
+                    int nextSpace = currencyPart.IndexOf(' ');
+                    if (nextSpace > 0) currencyPart = currencyPart.Substring(nextSpace).Trim();
+                    else currencyPart = currencyPart.Substring(1).Trim();
+                }
+            }
+        }
 
         if (string.IsNullOrEmpty(from)) return hasMath ? ParseResult.AmountOnly : ParseResult.Incomplete;
-
-        string remaining = currencyPart.Substring(index).Trim();
-        index = 0;
-        to = ExtractNextCurrency(remaining, ref index);
 
         if (!hasMath) return string.IsNullOrEmpty(to) ? ParseResult.CurrencyOnly : ParseResult.Success;
 

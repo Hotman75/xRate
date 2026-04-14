@@ -21,10 +21,10 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <Grid Padding="30,10,30,30">
-                <StackPanel MaxWidth="380" HorizontalAlignment="Stretch" VerticalAlignment="Top" Spacing="12">
+                <StackPanel MaxWidth="420" HorizontalAlignment="Stretch" VerticalAlignment="Top" Spacing="12">
 
                     <TextBlock Text="xRate" FontSize="28" FontFamily="{StaticResource UbuntuMedium}" FontWeight="Medium"
-                        CharacterSpacing="-30" HorizontalAlignment="Center" Margin="0,0,0,5">
+                        CharacterSpacing="-30" HorizontalAlignment="Center" Margin="0,0,0,10">
                         <TextBlock.Foreground>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                                 <GradientStop Color="#FFFFFF" Offset="0.3" />
@@ -33,83 +33,102 @@
                         </TextBlock.Foreground>
                     </TextBlock>
 
-                    <Grid Margin="0,5">
-                        <TextBox x:Name="AmountTextBox" FontSize="16" FontWeight="SemiBold"
-                            TextAlignment="Left" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                            Background="Transparent" BorderThickness="0,0,0,1" BorderBrush="#22FFFFFF"
-                            Padding="10,8,0,8" PlaceholderText="Amount..." TextChanged="AmountTextBox_TextChanged"
-                            GotFocus="AmountTextBox_GotFocus" />
-                    </Grid>
-
-                    <Grid Margin="0,5">
+                    <Grid Margin="0,5" ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="60" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="110" />
                         </Grid.ColumnDefinitions>
 
-                        <ComboBox x:Name="FromComboBox" Grid.Column="0" HorizontalAlignment="Stretch" FontSize="14"
-                            SelectionChanged="OnCurrencySelectionChanged" />
+                        <TextBox x:Name="FromAmountTextBox" Grid.Column="0" FontSize="16" FontWeight="SemiBold"
+                            Background="Transparent" BorderThickness="0,0,0,1" BorderBrush="#22FFFFFF" Padding="5,8,5,8"
+                            PlaceholderText="From..." TextChanged="FromAmountTextBox_TextChanged"
+                            GotFocus="AmountTextBox_GotFocus" />
 
-                        <Button x:Name="SwapButton" Grid.Column="1" HorizontalAlignment="Center"
-                            VerticalAlignment="Center" Background="Transparent" BorderThickness="0"
-                            Click="SwapButton_Click" ToolTipService.ToolTip="Swap Currencies">
-                            <SymbolIcon Symbol="Sync" Foreground="#0078D4" />
+                        <Button x:Name="CopyFromButton" Grid.Column="1" Background="Transparent" BorderThickness="0"
+                            Click="CopyFromButton_Click" VerticalAlignment="Center"
+                            ToolTipService.ToolTip="Copy" Opacity="0.3">
+                            <SymbolIcon Symbol="Copy" Foreground="Gray" />
+                        </Button>
+
+                        <ComboBox x:Name="FromComboBox" Grid.Column="2" HorizontalAlignment="Stretch" FontSize="14"
+                            VerticalAlignment="Center" SelectionChanged="OnCurrencySelectionChanged" />
+                    </Grid>
+
+                    <TextBlock Text="=" HorizontalAlignment="Center" FontSize="22" FontWeight="Bold" Foreground="Gray"
+                        Opacity="0.5" Margin="0,-5,0,-5" />
+
+                    <Grid Margin="0,5" ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="105" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox x:Name="ToAmountTextBox" Grid.Column="0" FontSize="16" FontWeight="SemiBold"
+                            Background="Transparent" BorderThickness="0,0,0,1" BorderBrush="#22FFFFFF" Padding="5,8,5,8"
+                            PlaceholderText="To..." TextChanged="ToAmountTextBox_TextChanged"
+                            GotFocus="AmountTextBox_GotFocus" />
+
+                        <Button x:Name="CopyToButton" Grid.Column="1" Background="Transparent" BorderThickness="0"
+                            Click="CopyToButton_Click" VerticalAlignment="Center"
+                            ToolTipService.ToolTip="Copy" Opacity="0.3">
+                            <SymbolIcon Symbol="Copy" Foreground="Gray" />
                         </Button>
 
                         <ComboBox x:Name="ToComboBox" Grid.Column="2" HorizontalAlignment="Stretch" FontSize="14"
-                            SelectionChanged="OnCurrencySelectionChanged" />
+                            VerticalAlignment="Center" SelectionChanged="OnCurrencySelectionChanged" />
                     </Grid>
 
-                    <StackPanel x:Name="DefaultActionsPanel" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="15" Visibility="Collapsed" Margin="0,5">
+                    <Grid Margin="0,10,0,5" HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="30">
+                            <Button x:Name="ResetDefaultButton" Click="ResetDefaultButton_Click"
+                                Background="Transparent" BorderThickness="0" Foreground="Gray" Visibility="Collapsed"
+                                ToolTipService.ToolTip="Reset Currencies">
+                                <SymbolIcon Symbol="Undo" />
+                            </Button>
 
-                        <Button x:Name="ResetDefaultButton" Click="ResetDefaultButton_Click"
-                            Background="Transparent" BorderThickness="0" Foreground="Gray" Padding="5"
-                            ToolTipService.ToolTip="Reset Currencies">
-                            <SymbolIcon Symbol="Undo" />
-                        </Button>
+                            <Button x:Name="SwapButton" Background="Transparent" BorderThickness="0"
+                                Click="SwapButton_Click" ToolTipService.ToolTip="Swap Currencies">
+                                <SymbolIcon Symbol="Sync" Foreground="#0078D4" />
+                            </Button>
 
-                        <Button x:Name="SetDefaultButton" Click="SetDefaultButton_Click"
-                            Background="Transparent" BorderThickness="0" Foreground="Gray" Padding="5"
-                            ToolTipService.ToolTip="Save as default Currencies">
-                            <SymbolIcon Symbol="Save" />
-                        </Button>
-
-                    </StackPanel>
+                            <Button x:Name="SetDefaultButton" Click="SetDefaultButton_Click" Background="Transparent"
+                                BorderThickness="0" Foreground="Gray" Visibility="Collapsed"
+                                ToolTipService.ToolTip="Save as default Currencies">
+                                <SymbolIcon Symbol="Save" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
 
                     <Border x:Name="ResultBorder" Visibility="Visible" Background="#15FFFFFF" CornerRadius="10"
-                        Padding="15" Margin="0,5,0,0" MinHeight="70">
-                        <Grid ColumnDefinitions="*, Auto">
-
-                            <StackPanel x:Name="EmptyStatePanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10" Opacity="0.4">
+                        Padding="15" Margin="0,5,0,0" MinHeight="60">
+                        <Grid>
+                            <StackPanel x:Name="EmptyStatePanel" Orientation="Horizontal" HorizontalAlignment="Center"
+                                VerticalAlignment="Center" Spacing="10" Opacity="0.4">
                                 <SymbolIcon Symbol="Calculator" />
                                 <TextBlock Text="Enter Amount..." FontSize="14" FontStyle="Italic" />
                             </StackPanel>
 
-                            <StackPanel x:Name="ResultContentPanel" Grid.Column="0" VerticalAlignment="Center" Spacing="2" Visibility="Collapsed">
-                                <TextBlock x:Name="ResultTextBlock" FontSize="16" FontWeight="SemiBold" Foreground="#0078D4" TextWrapping="Wrap" />
-                                <TextBlock x:Name="ResultSubtitleTextBlock" FontSize="12" Foreground="Gray" Visibility="Collapsed" TextWrapping="Wrap" />
-                            </StackPanel>
-
-                            <Button x:Name="CopyResultButton" Grid.Column="1" Background="Transparent"
-                                BorderThickness="0" Margin="10,0,0,0" Click="CopyResultButton_Click"
-                                VerticalAlignment="Center" Visibility="Collapsed" ToolTipService.ToolTip="Copy Result">
-                                <SymbolIcon Symbol="Copy" Foreground="Gray" />
-                            </Button>
+                            <TextBlock x:Name="ResultTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                FontSize="18" FontWeight="SemiBold" Foreground="#0078D4" TextWrapping="Wrap"
+                                Visibility="Collapsed" />
                         </Grid>
                     </Border>
 
                     <Border x:Name="RateBorder" Visibility="Visible" Background="#0AFFFFFF" CornerRadius="8"
                         Padding="15,10" BorderBrush="#15FFFFFF" BorderThickness="1">
                         <Grid ColumnDefinitions="*, Auto">
-
                             <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
-                                <TextBlock x:Name="RateTextBlock" FontSize="14" Foreground="#EBEBEB" FontWeight="Medium" />
-                                <TextBlock x:Name="RateSubtitleTextBlock" FontSize="12" Foreground="Gray" Visibility="Collapsed" />
+                                <TextBlock x:Name="RateTextBlock" FontSize="14" Foreground="#EBEBEB"
+                                    FontWeight="Medium" />
+                                <TextBlock x:Name="RateSubtitleTextBlock" FontSize="12" Foreground="Gray"
+                                    Visibility="Collapsed" />
                             </StackPanel>
 
                             <Button x:Name="CopyRateButton" Grid.Column="1" Background="Transparent" BorderThickness="0"
-                                Click="CopyRateButton_Click" VerticalAlignment="Center" Visibility="Collapsed" ToolTipService.ToolTip="Copy Rate">
+                                Click="CopyRateButton_Click" VerticalAlignment="Center"
+                                ToolTipService.ToolTip="Copy Rate">
                                 <SymbolIcon Symbol="Copy" Foreground="Gray" />
                             </Button>
                         </Grid>
