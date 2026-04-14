@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.System;
 using xRate.Core.Helpers;
 using xRate.Core.Models;
 using xRate.Core.Services;
@@ -25,15 +24,15 @@ internal sealed partial class xRateExtPage : DynamicListPage
     private readonly LaunchAppCommand _launchCommand = new();
     private readonly ListCurrenciesPage _currenciesPage = new();
     private readonly SettingsPage _settingsPage = new();
-    private readonly CurrencyService _currencyService = new();
+
 
     public xRateExtPage()
     {
         this.Name = "xRate";
         this.Icon = IconHelpers.FromRelativePath("Assets\\Ext_icon.png");
-        _settings = _settingsService.GetSettings(true);
         this.PlaceholderText = "Amount <From> <To> (e.g. 100 USD EUR)";
 
+        _settings = _settingsService.GetSettings(true);
         UpdateDisplay(string.Empty);
     }
 
@@ -48,11 +47,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
             return;
         }
 
-        double amount = 0;
-        string fromRaw = string.Empty;
-        string toRaw = string.Empty;
-
-        var parseStatus = InputParser.TryParse(newSearch, out amount, out fromRaw, out toRaw);
+        var parseStatus = InputParser.TryParse(newSearch, out double amount, out string fromRaw, out string toRaw);
 
         if (parseStatus == ParseResult.InvalidAmount)
         {
@@ -69,8 +64,9 @@ internal sealed partial class xRateExtPage : DynamicListPage
             string to = string.IsNullOrWhiteSpace(toRaw) ? _settings.DefaultTo : CurrencyMapper.Normalize(toRaw);
 
             var cache = _apiService.GetCachedConversion(from, to);
+            bool isCacheFresh = cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60;
 
-            if (cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60)
+            if (isCacheFresh)
             {
                 _debounceTimer?.Cancel();
                 DisplayFinalLayout(amount, from, to, cache);
@@ -106,6 +102,70 @@ internal sealed partial class xRateExtPage : DynamicListPage
         }
     }
 
+    private void UpdateDisplay(string search, bool isFetching = false)
+    {
+        _items.Clear();
+        _settings = _settingsService.GetSettings(true);
+
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            AddSingleItem("Enter Amount...", new NoOpCommand(), "\uE8EF");
+
+            string from = _settings.DefaultFrom;
+            string to = _settings.DefaultTo;
+
+            var cache = _apiService.GetCachedConversion(from, to);
+            bool isCacheFresh = cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60;
+
+            if (cache != null && cache.Rates != null && cache.Rates.Any())
+            {
+                double rate = cache.Rates[0].Rate;
+                double reverseRate = rate > 0 ? 1.0 / rate : 0;
+
+                var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
+                displayFormat.NumberGroupSeparator = " ";
+
+                string formattedRate = rate.ToString("N4", displayFormat);
+                string formattedReverseRate = reverseRate.ToString("N4", displayFormat);
+
+                AddSingleItem(
+                    $"1 {from} = {formattedRate} {to}",
+                    new CopyTextCommand(rate.ToString("F4", CultureInfo.InvariantCulture)) { Name = "Copy Rate" },
+                    "\uE825",
+                    rate > 0 ? $"1 {to} = {formattedReverseRate} {from}" : ""
+                );
+            }
+            else
+            {
+                AddSingleItem($"1 {from} = ... {to}", new NoOpCommand(), "\uE94E");
+            }
+
+            if (!isCacheFresh)
+            {
+                FetchLatestRateSilently(from, to);
+            }
+        }
+        else
+        {
+            var parseStatus = InputParser.TryParse(search, out double amount, out string fromRaw, out string toRaw);
+
+            if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly || parseStatus == ParseResult.CurrencyOnly)
+            {
+                string from = string.IsNullOrEmpty(fromRaw) ? _settings.DefaultFrom : CurrencyMapper.Normalize(fromRaw);
+                string to = string.IsNullOrWhiteSpace(toRaw) ? _settings.DefaultTo : CurrencyMapper.Normalize(toRaw);
+
+                string title = isFetching ? "..." : $"{amount} {from} to {to}";
+                AddSingleItem(title, new NoOpCommand(), "\uE94E");
+            }
+            else
+            {
+                AddSingleItem("Amount Error", new NoOpCommand(), "\uE783");
+            }
+        }
+
+        RaiseItemsChanged(_items.Count);
+    }
+
     private void DisplayFinalLayout(double amount, string from, string to, ConversionResult result)
     {
         var rateInfo = result.Rates?.FirstOrDefault();
@@ -113,7 +173,6 @@ internal sealed partial class xRateExtPage : DynamicListPage
 
         double rate = rateInfo.Rate;
         double finalValue = amount * rate;
-
         double reverseRate = rate > 0 ? 1.0 / rate : 0;
 
         var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
@@ -122,7 +181,6 @@ internal sealed partial class xRateExtPage : DynamicListPage
         string formattedAmount = amount.ToString("N2", displayFormat);
         string formattedResult = finalValue.ToString("N2", displayFormat);
         string formattedRate = rate.ToString("N4", displayFormat);
-
         string formattedReverseRate = reverseRate.ToString("N4", displayFormat);
 
         _items.Clear();
@@ -144,76 +202,6 @@ internal sealed partial class xRateExtPage : DynamicListPage
         RaiseItemsChanged(_items.Count);
     }
 
-    private void UpdateDisplay(string search, bool isFetching = false)
-    {
-        _items.Clear();
-        _settings = _settingsService.GetSettings(true);
-
-        if (string.IsNullOrWhiteSpace(search))
-        {
-            AddSingleItem("Enter Amount...", new NoOpCommand(), "\uE8EF");
-
-            string from = _settings.DefaultFrom;
-            string to = _settings.DefaultTo;
-
-            var cache = _currencyService.GetCachedConversion(from, to);
-            bool isCacheFresh = cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60;
-
-            if (cache != null && cache.Rates != null && cache.Rates.Any())
-            {
-                double rate = cache.Rates[0].Rate;
-
-                double reverseRate = rate > 0 ? 1.0 / rate : 0;
-
-                var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
-                displayFormat.NumberGroupSeparator = " ";
-
-                string formattedRate = rate.ToString("N4", displayFormat);
-
-                string formattedReverseRate = reverseRate.ToString("N4", displayFormat);
-
-                AddSingleItem(
-                    $"1 {from} = {formattedRate} {to}",
-                    new CopyTextCommand(rate.ToString("F4", CultureInfo.InvariantCulture)) { Name = "Copy Rate" },
-                    "\uE825",
-                    rate > 0 ? $"1 {to} = {formattedReverseRate} {from}" : ""
-                );
-            }
-            else
-            {
-                AddSingleItem($"1 {from} = ... {to}", new NoOpCommand(), "\uE94E");
-            }
-
-            if (!isCacheFresh)
-            {
-                FetchLatestRate(from, to);
-            }
-        }
-        else
-        {
-            double amount = 0;
-            string fromRaw = string.Empty;
-            string toRaw = string.Empty;
-
-            var parseStatus = InputParser.TryParse(search, out amount, out fromRaw, out toRaw);
-
-            if (parseStatus == ParseResult.Success || parseStatus == ParseResult.AmountOnly || parseStatus == ParseResult.CurrencyOnly)
-            {
-                string from = string.IsNullOrEmpty(fromRaw) ? _settings.DefaultFrom : CurrencyMapper.Normalize(fromRaw);
-                string to = string.IsNullOrWhiteSpace(toRaw) ? _settings.DefaultTo : CurrencyMapper.Normalize(toRaw);
-
-                string title = isFetching ? "..." : $"{amount} {from} to {to}";
-                AddSingleItem(title, new NoOpCommand(), "\uE94E");
-            }
-            else
-            {
-                AddSingleItem("Amount Error", new NoOpCommand(), "\uE783");
-            }
-        }
-
-        RaiseItemsChanged(_items.Count);
-    }
-
     private void AddSingleItem(string title, ICommand cmd, string iconGlyph, string subtitle = "")
     {
         var moreCommands = new IContextItem[] {
@@ -231,7 +219,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
         });
     }
 
-    private void FetchLatestRate(string from, string to)
+    private void FetchLatestRateSilently(string from, string to)
     {
         _debounceTimer?.Cancel();
         _debounceTimer = new CancellationTokenSource();
@@ -241,16 +229,11 @@ internal sealed partial class xRateExtPage : DynamicListPage
         {
             try
             {
-                await Task.Delay(400, token);
+                var result = await _apiService.GetConversionAsync(from, to);
 
-                if (!token.IsCancellationRequested)
+                if (!token.IsCancellationRequested && result != null)
                 {
-                    var result = await _currencyService.GetConversionAsync(from, to);
-
-                    if (!token.IsCancellationRequested && result != null)
-                    {
-                        UpdateDisplay(string.Empty);
-                    }
+                    UpdateDisplay(string.Empty);
                 }
             }
             catch (OperationCanceledException) { }

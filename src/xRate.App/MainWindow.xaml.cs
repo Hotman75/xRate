@@ -66,6 +66,17 @@ public sealed partial class MainWindow : Window
     {
         _settings = _settingsService.GetSettings(true);
         CheckDefaultStatus();
+
+        string cFrom = CurrencyMapper.Normalize(FromComboBox.SelectedItem?.ToString() ?? _settings.DefaultFrom);
+        string cTo = CurrencyMapper.Normalize(ToComboBox.SelectedItem?.ToString() ?? _settings.DefaultTo);
+
+        var cache = _currencyService.GetCachedConversion(cFrom, cTo);
+        bool isStale = cache == null || (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes >= 60;
+
+        if (isStale)
+        {
+            FetchLatestRate(cFrom, cTo);
+        }
     }
 
     private void LoadCurrencies()
@@ -175,8 +186,14 @@ public sealed partial class MainWindow : Window
         var cache = _currencyService.GetCachedConversion(finalFrom, finalTo);
         bool isCacheFresh = cache != null && (DateTime.Now - cache.OfflineDate).GetValueOrDefault().TotalMinutes < 60;
 
-        if (cache != null) UpdateRateUI(finalFrom, finalTo, cache.Rates[0].Rate);
-        else RateTextBlock.Text = "...";
+        if (cache != null)
+        {
+            UpdateRateUI(finalFrom, finalTo, cache.Rates[0].Rate);
+        }
+        else
+        {
+            RateTextBlock.Text = "...";
+        }
 
         if (isCacheFresh)
         {
@@ -185,7 +202,7 @@ public sealed partial class MainWindow : Window
         }
         else
         {
-            ResultTextBlock.Text = "...";
+            if (cache == null) ResultTextBlock.Text = "...";
             FetchLatestRate(finalFrom, finalTo, amount);
         }
     }
