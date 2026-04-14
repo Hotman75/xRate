@@ -75,7 +75,7 @@
                             Background="Transparent" BorderThickness="0" Foreground="Gray" Padding="5">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <SymbolIcon Symbol="Undo" />
-                                <TextBlock Text="Reset" FontSize="12" VerticalAlignment="Center" />
+                                <TextBlock Text="Reset Currencies" FontSize="11" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
 
@@ -83,7 +83,7 @@
                             Background="Transparent" BorderThickness="0" Foreground="Gray" Padding="5">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <SymbolIcon Symbol="Save" />
-                                <TextBlock Text="Save as default" FontSize="12" VerticalAlignment="Center" />
+                                <TextBlock Text="Save as default Currencies" FontSize="11" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
 
@@ -114,8 +114,12 @@
                     <Border x:Name="RateBorder" Visibility="Visible" Background="#0AFFFFFF" CornerRadius="8"
                         Padding="15,10" BorderBrush="#15FFFFFF" BorderThickness="1">
                         <Grid ColumnDefinitions="*, Auto">
-                            <TextBlock x:Name="RateTextBlock" Grid.Column="0" FontSize="14" Foreground="#EBEBEB"
-                                FontWeight="Medium" VerticalAlignment="Center" />
+
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                                <TextBlock x:Name="RateTextBlock" FontSize="14" Foreground="#EBEBEB" FontWeight="Medium" />
+
+                                <TextBlock x:Name="RateSubtitleTextBlock" FontSize="12" Foreground="Gray" Visibility="Collapsed" />
+                            </StackPanel>
 
                             <Button x:Name="CopyRateButton" Grid.Column="1" Background="Transparent" BorderThickness="0"
                                 Click="CopyRateButton_Click" VerticalAlignment="Center" Visibility="Collapsed">
@@ -123,6 +127,7 @@
                             </Button>
                         </Grid>
                     </Border>
+                    
                 </StackPanel>
             </Grid>
         </ScrollViewer>

@@ -114,13 +114,16 @@ internal sealed partial class xRateExtPage : DynamicListPage
         double rate = rateInfo.Rate;
         double finalValue = amount * rate;
 
+        double reverseRate = rate > 0 ? 1.0 / rate : 0;
+
         var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
         displayFormat.NumberGroupSeparator = " ";
 
         string formattedAmount = amount.ToString("N2", displayFormat);
         string formattedResult = finalValue.ToString("N2", displayFormat);
-
         string formattedRate = rate.ToString("N4", displayFormat);
+
+        string formattedReverseRate = reverseRate.ToString("N4", displayFormat);
 
         _items.Clear();
 
@@ -134,7 +137,8 @@ internal sealed partial class xRateExtPage : DynamicListPage
         AddSingleItem(
             $"1 {from} = {formattedRate} {to}",
             new CopyTextCommand(rate.ToString("F4", CultureInfo.InvariantCulture)) { Name = "Copy Rate" },
-            "\uE8EF"
+            "\uE825",
+            rate > 0 ? $"1 {to} = {formattedReverseRate} {from}" : ""
         );
 
         RaiseItemsChanged(_items.Count);
@@ -158,15 +162,21 @@ internal sealed partial class xRateExtPage : DynamicListPage
             if (cache != null && cache.Rates != null && cache.Rates.Any())
             {
                 double rate = cache.Rates[0].Rate;
+
+                double reverseRate = rate > 0 ? 1.0 / rate : 0;
+
                 var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
                 displayFormat.NumberGroupSeparator = " ";
 
                 string formattedRate = rate.ToString("N4", displayFormat);
 
+                string formattedReverseRate = reverseRate.ToString("N4", displayFormat);
+
                 AddSingleItem(
                     $"1 {from} = {formattedRate} {to}",
                     new CopyTextCommand(rate.ToString("F4", CultureInfo.InvariantCulture)) { Name = "Copy Rate" },
-                    "\uE94E"
+                    "\uE825",
+                    rate > 0 ? $"1 {to} = {formattedReverseRate} {from}" : ""
                 );
             }
             else

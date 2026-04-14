@@ -190,8 +190,22 @@ public sealed partial class MainWindow : Window
         var displayFormat = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
         displayFormat.NumberGroupSeparator = " ";
 
+        double reverseRate = rate > 0 ? 1.0 / rate : 0;
+
         _currentRawRate = rate.ToString("0.####", CultureInfo.InvariantCulture);
+
         RateTextBlock.Text = $"1 {from} = {rate.ToString("N4", displayFormat)} {to}";
+
+        if (rate > 0)
+        {
+            RateSubtitleTextBlock.Text = $"1 {to} = {reverseRate.ToString("N4", displayFormat)} {from}";
+            RateSubtitleTextBlock.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            RateSubtitleTextBlock.Visibility = Visibility.Collapsed;
+        }
+
         CopyRateButton.Visibility = Visibility.Visible;
     }
 
@@ -275,10 +289,23 @@ public sealed partial class MainWindow : Window
         SelectCurrencyInCombo(FromComboBox, _settings.DefaultFrom);
         SelectCurrencyInCombo(ToComboBox, _settings.DefaultTo);
 
+        string input = AmountTextBox.Text;
+        var match = System.Text.RegularExpressions.Regex.Match(input, @"[a-zA-Z\p{Sc}]");
+
+        if (match.Success)
+        {
+            string cleanMath = input.Substring(0, match.Index).Trim();
+
+            AmountTextBox.Text = cleanMath;
+        }
+        else
+        {
+            TriggerConversion();
+        }
+
         _isUpdatingCombos = false;
 
         CheckDefaultStatus();
-        TriggerConversion();
     }
 
     private void CopyResultButton_Click(object sender, RoutedEventArgs e)
@@ -301,7 +328,9 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void AmountTextBox_GotFocus(object sender, RoutedEventArgs e) => AmountTextBox?.SelectAll();
+    private void AmountTextBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+    }
 
     private void ShowEmptyState()
     {
