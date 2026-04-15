@@ -12,7 +12,7 @@
 		<RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
 		<SelfContained>true</SelfContained>
 		<PublishProfile>win-$(Platform).pubxml</PublishProfile>
-		<EnableMsixTooling>true</EnableMsixTooling>
+		<EnableMsixTooling>false</EnableMsixTooling>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
@@ -34,20 +34,10 @@
 		<PackageReference Include="Microsoft.CommandPalette.Extensions" />
 		<PackageReference Include="Microsoft.Windows.CsWinRT" />
 		<PackageReference Include="Shmuelie.WinRTServer" />
-		<PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\xRate.Core\xRate.Core.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Content Include="Assets\**">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Content>
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
@@ -73,7 +63,7 @@
 
 	<PropertyGroup Condition="'$(Configuration)'!='Debug'">
 		<PublishTrimmed>false</PublishTrimmed>
-		<PublishSingleFile>true</PublishSingleFile>
+		<PublishSingleFile>false</PublishSingleFile>
 		<ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
 	</PropertyGroup>
 </Project>

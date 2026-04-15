@@ -1,19 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
-  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
   xmlns:systemai="http://schemas.microsoft.com/appx/manifest/systemai/windows10"
-  IgnorableNamespaces="uap uap3 rescap systemai">
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  IgnorableNamespaces="uap uap3 rescap com systemai">
 
-	<Identity
-	  Name="OthmanAMOR.55979B0A02F44"
-	  Publisher="CN=CA938298-1CC2-4C29-B546-D8367F20D6A1"
-	  Version="1.2.0.0" />
-
+	<Identity Name="OthmanAMOR.55979B0A02F44" Publisher="CN=CA938298-1CC2-4C29-B546-D8367F20D6A1" Version="1.2.0.0" />
 	<mp:PhoneIdentity PhoneProductId="de75ec5b-3717-4df6-8085-9b0eac5f5105" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
 	<Properties>
@@ -23,12 +19,8 @@
 	</Properties>
 
 	<Dependencies>
-		<TargetDeviceFamily Name="Windows.Universal"
-							MinVersion="10.0.19041.0"
-							MaxVersionTested="10.0.26100.0" />
-		<TargetDeviceFamily Name="Windows.Desktop"
-							MinVersion="10.0.19041.0"
-							MaxVersionTested="10.0.26100.0" />
+		<TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+		<TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
 	</Dependencies>
 
 	<Resources>
@@ -37,41 +29,26 @@
 
 	<Applications>
 		<Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
-			<uap:VisualElements
-			  DisplayName="xRate"
-			  Description="Quick Currency Converter"
-			  BackgroundColor="transparent"
-			  Square150x150Logo="Assets\Square150x150Logo.png"
-			  Square44x44Logo="Assets\Square44x44Logo.png">
+			<uap:VisualElements DisplayName="xRate" Description="Quick Currency Converter" BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
 				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png"/>
 				<uap:SplashScreen Image="Assets\SplashScreen.png" />
 			</uap:VisualElements>
+
 			<Extensions>
 				<uap:Extension Category="windows.protocol">
 					<uap:Protocol Name="xrate">
 						<uap:DisplayName>xRate Protocol</uap:DisplayName>
 					</uap:Protocol>
 				</uap:Extension>
-			</Extensions>
-		</Application>
 
-		<Application Id="xRateExtension" Executable="xRateExt.exe" EntryPoint="xRateExt.App">
-			<uap:VisualElements
-			  DisplayName="xRate Extension"
-			  Description="PowerToys Command Palette Extension"
-			  BackgroundColor="transparent"
-			  Square150x150Logo="Assets\Square150x150Logo.png"
-			  Square44x44Logo="Assets\Square44x44Logo.png"
-			  AppListEntry="none">
-				<uap:DefaultTile/> </uap:VisualElements>
-			<Extensions>
 				<uap3:Extension Category="windows.appExtension">
-					<uap3:AppExtension Name="com.microsoft.commandpalette"
-									   Id="xrate"
-									   DisplayName="xRate">
+					<uap3:AppExtension Name="com.microsoft.commandpalette" Id="xRateExtension" DisplayName="xRate">
 						<uap3:Properties>
-							<Icon>Assets\icon.png</Icon>
+							<Icon>Assets\Square44x44Logo.png</Icon>
 							<CmdPalProvider>
+								<Activation>
+									<CreateInstance ClassId="12b369dd-0fb9-43e0-a62a-41a414ffc0e7" />
+								</Activation>
 								<SupportedInterfaces>
 									<Commands/>
 								</SupportedInterfaces>
@@ -79,6 +56,14 @@
 						</uap3:Properties>
 					</uap3:AppExtension>
 				</uap3:Extension>
+
+				<com:Extension Category="windows.comServer">
+					<com:ComServer>
+						<com:ExeServer Executable="Extensions\xRateExt.exe" DisplayName="xRate Command Palette Extension" Arguments="-RegisterProcessAsComServer">
+							<com:Class Id="12b369dd-0fb9-43e0-a62a-41a414ffc0e7" DisplayName="xRate Extension Class" />
+						</com:ExeServer>
+					</com:ComServer>
+				</com:Extension>
 			</Extensions>
 		</Application>
 	</Applications>

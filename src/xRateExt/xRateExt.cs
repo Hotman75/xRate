@@ -1,7 +1,3 @@
-// Copyright (c) Microsoft Corporation
-// The Microsoft Corporation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -9,6 +5,7 @@ using Microsoft.CommandPalette.Extensions;
 
 namespace xRateExt;
 
+[ComVisible(true)]
 [Guid("12b369dd-0fb9-43e0-a62a-41a414ffc0e7")]
 public sealed partial class xRateExt : IExtension, IDisposable
 {
