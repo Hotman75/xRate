@@ -42,15 +42,15 @@
 				</uap:Extension>
 
 				<uap3:Extension Category="windows.appExtension">
-					<uap3:AppExtension Name="com.microsoft.commandpalette" Id="xRateExtension" DisplayName="xRate">
+					<uap3:AppExtension Name="com.microsoft.commandpalette" Id="xRateExtension" DisplayName="xRate" PublicFolder="Extensions">
 						<uap3:Properties>
-							<Icon>Assets\Square44x44Logo.png</Icon>
+							<Icon>Assets\icon.png</Icon>
 							<CmdPalProvider>
 								<Activation>
 									<CreateInstance ClassId="12b369dd-0fb9-43e0-a62a-41a414ffc0e7" />
 								</Activation>
 								<SupportedInterfaces>
-									<Commands/>
+									<Commands />
 								</SupportedInterfaces>
 							</CmdPalProvider>
 						</uap3:Properties>
