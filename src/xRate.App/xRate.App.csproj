@@ -57,12 +57,6 @@
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\xRateExt\xRateExt.csproj" ReferenceOutputAssembly="false">
-			<Publish>true</Publish>
-			<AdditionalProperties>SelfContained=true;Platform=$(Platform)</AdditionalProperties>
-		</ProjectReference>
-	</ItemGroup>
 
   <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
@@ -81,7 +75,7 @@
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
     <GenerateTemporaryStoreCertificate>True</GenerateTemporaryStoreCertificate>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-    <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <GenerateTestArtifacts>True</GenerateTestArtifacts>
@@ -90,5 +84,7 @@
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 	<AppxPackage>true</AppxPackage>
 	<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+	<PackageCertificateThumbprint>0B31A6D17E7B531167A586D45CEB026816CCF6C2</PackageCertificateThumbprint>
+	<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
   </PropertyGroup>
 </Project>

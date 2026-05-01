@@ -14,7 +14,7 @@ public partial class xRateExtCommandsProvider : CommandProvider
         Id = ProviderId;
         DisplayName = "xRate";
 
-        var icon = IconHelpers.FromRelativePath("Assets\\Ext_icon.png");
+        var icon = IconHelpers.FromRelativePath("Assets\\icon.png");
 
         _commands = [
             new ListItem(new xRateExtPage())

@@ -54,33 +54,6 @@
 				</uap:Extension>
 			</Extensions>
 		</Application>
-
-		<Application Id="xRateExtension" Executable="xRateExt.exe" EntryPoint="xRateExt.App">
-			<uap:VisualElements
-			  DisplayName="xRate Extension"
-			  Description="PowerToys Command Palette Extension"
-			  BackgroundColor="transparent"
-			  Square150x150Logo="Assets\Square150x150Logo.png"
-			  Square44x44Logo="Assets\Square44x44Logo.png"
-			  AppListEntry="none">
-				<uap:DefaultTile/> </uap:VisualElements>
-			<Extensions>
-				<uap3:Extension Category="windows.appExtension">
-					<uap3:AppExtension Name="com.microsoft.commandpalette"
-									   Id="xrate"
-									   DisplayName="xRate">
-						<uap3:Properties>
-							<Icon>Assets\icon.png</Icon>
-							<CmdPalProvider>
-								<SupportedInterfaces>
-									<Commands/>
-								</SupportedInterfaces>
-							</CmdPalProvider>
-						</uap3:Properties>
-					</uap3:AppExtension>
-				</uap3:Extension>
-			</Extensions>
-		</Application>
 	</Applications>
 
 	<Extensions>

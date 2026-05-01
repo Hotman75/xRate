@@ -13,28 +13,29 @@
 		<SelfContained>true</SelfContained>
 		<PublishProfile>win-$(Platform).pubxml</PublishProfile>
 		<EnableMsixTooling>true</EnableMsixTooling>
+		<AppxPackage>true</AppxPackage>
 		<Nullable>enable</Nullable>
+		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+		<WindowsPackageType>MSIX</WindowsPackageType>
+		<AppxPackageIdentityName>OthmanAMOR.xRate-CommandPaletteExtension</AppxPackageIdentityName>
+		<AppxPackagePublisher>CN=CA938298-1CC2-4C29-B546-D8367F20D6A1</AppxPackagePublisher>
+		<AppxPackageVersion>1.0.0.0</AppxPackageVersion>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<Content Include="Assets\**">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
 
 	<ItemGroup>
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+	<ItemGroup>
 		<ProjectCapability Include="Msix" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CommandPalette.Extensions" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" />
 		<PackageReference Include="Microsoft.Windows.CsWinRT" />
 		<PackageReference Include="Shmuelie.WinRTServer" />
-		<PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX">
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
@@ -50,8 +51,9 @@
 		</Content>
 	</ItemGroup>
 
-	<PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+	<PropertyGroup>
 		<HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+		<AppxPackage>true</AppxPackage>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -61,6 +63,16 @@
 		<WarningsNotAsErrors>IL2081;$(WarningsNotAsErrors)</WarningsNotAsErrors>
 		<ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
 		<DefaultLanguage>en</DefaultLanguage>
+		<GenerateTemporaryStoreCertificate>True</GenerateTemporaryStoreCertificate>
+		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+		<PackageCertificateThumbprint>0B31A6D17E7B531167A586D45CEB026816CCF6C2</PackageCertificateThumbprint>
+		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+		<AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+		<GenerateTestArtifacts>False</GenerateTestArtifacts>
+		<AppxBundle>Never</AppxBundle>
+		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -73,7 +85,7 @@
 
 	<PropertyGroup Condition="'$(Configuration)'!='Debug'">
 		<PublishTrimmed>false</PublishTrimmed>
-		<PublishSingleFile>true</PublishSingleFile>
+		<PublishSingleFile>false</PublishSingleFile>
 		<ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
 	</PropertyGroup>
 </Project>
