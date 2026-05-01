@@ -75,7 +75,7 @@ public static class InputParser
         if (sub.Length >= 3)
         {
             string potential = sub.Substring(0, 3);
-            if (CurrencyMapper.SupportedCurrencies.Any(c => c.StartsWith(potential, StringComparison.OrdinalIgnoreCase)))
+            if (CurrencyMapper.SupportedCurrencies.Any(c => c.IsoCode.Equals(potential, StringComparison.OrdinalIgnoreCase)))
             {
                 currentIndex += (text.Length - sub.Length) + 3;
                 return potential.ToUpperInvariant();

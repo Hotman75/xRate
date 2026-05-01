@@ -20,12 +20,14 @@ internal sealed partial class SettingsFormContent : FormContent
     public void Reload()
     {
         var settings = _settingsService.GetSettings(true);
-        
-        var choicesJson = string.Join(",", CurrencyMapper.SupportedCurrencies.Select(entry => 
+
+        var choicesJson = string.Join(",", CurrencyMapper.SupportedCurrencies.Select(item =>
         {
-            var dashIndex = entry.IndexOf(" - ");
-            var iso = dashIndex >= 0 ? entry.Substring(0, dashIndex) : entry;
-            return $"{{\"title\":\"{JsonEncodedText.Encode(entry)}\",\"value\":\"{iso}\"}}";
+            string displayTitle = $"{item.IsoCode} - {item.Name}";
+
+            if (item.IsEmoji) displayTitle = $"{item.Emoji} {displayTitle}";
+
+            return $"{{\"title\":\"{JsonEncodedText.Encode(displayTitle)}\",\"value\":\"{item.IsoCode}\"}}";
         }));
 
         TemplateJson = $$"""
@@ -81,13 +83,13 @@ internal sealed partial class SettingsFormContent : FormContent
         {
             var from = formInput["DefaultFrom"]?.GetValue<string>();
             var to = formInput["DefaultTo"]?.GetValue<string>();
-            
+
             if (!string.IsNullOrEmpty(from) && !string.IsNullOrEmpty(to))
             {
                 var currentSettings = _settingsService.GetSettings();
                 currentSettings.DefaultFrom = from;
                 currentSettings.DefaultTo = to;
-                
+
                 _ = _settingsService.SaveSettingsAsync(currentSettings);
             }
         }

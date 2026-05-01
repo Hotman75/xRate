@@ -5,6 +5,39 @@ using System.Linq;
 
 namespace xRate.Core.Helpers;
 
+public class CurrencyItem
+{
+    public string IsoCode { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Symbol { get; set; } = string.Empty;
+    public string Emoji { get; set; } = string.Empty;
+
+    public bool IsEmoji => !string.IsNullOrEmpty(Emoji);
+
+    public string FlagPath
+    {
+        get
+        {
+            if (IsEmoji) return "ms-appx:///Assets/Flags/xx.svg";
+
+            string iso = IsoCode.ToLowerInvariant();
+            string countryCode = iso switch
+            {
+                "eur" => "eu",
+                "gbp" => "gb",
+                "ang" => "cw",
+                "aed" => "ae",
+                "xaf" or "xof" => "un",
+                "xcd" => "un",
+                "xpf" => "un",
+                _ => iso.Length >= 2 ? iso.Substring(0, 2) : "xx"
+            };
+            return $"ms-appx:///Assets/Flags/{countryCode}.svg";
+        }
+    }
+    public override string ToString() => IsoCode;
+}
+
 public static class CurrencyMapper
 {
     private static readonly Dictionary<string, string> _symbolMap = new(StringComparer.OrdinalIgnoreCase)
@@ -100,7 +133,7 @@ public static class CurrencyMapper
         "ZWG - Zimbabwean Gold"
     };
 
-    public static readonly List<string> SupportedCurrencies;
+    public static readonly List<CurrencyItem> SupportedCurrencies;
 
     static CurrencyMapper()
     {
@@ -114,11 +147,24 @@ public static class CurrencyMapper
         SupportedCurrencies = RawCurrencies.Select(c =>
         {
             string iso = c.Substring(0, 3);
-            if (reverseSymbolMap.TryGetValue(iso, out var symbols))
+            string name = c.Substring(6);
+            string symbol = reverseSymbolMap.TryGetValue(iso, out var symbols) ? symbols : "";
+
+            string emoji = iso switch
             {
-                return $"{c} · {symbols}";
-            }
-            return c;
+                "XAU" => "🥇",
+                "XAG" => "🥈",
+                "BTC" => "₿",
+                _ => ""
+            };
+
+            return new CurrencyItem
+            {
+                IsoCode = iso,
+                Name = name,
+                Symbol = symbol,
+                Emoji = emoji
+            };
         }).ToList();
     }
 

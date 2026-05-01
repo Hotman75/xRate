@@ -29,6 +29,9 @@ public sealed partial class MainWindow : Window
     private bool _isUpdating = false;
     private bool _isFromActive = true;
 
+    public Visibility ShowIfEmoji(bool isEmoji) => isEmoji ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility ShowIfSvg(bool isEmoji) => isEmoji ? Visibility.Collapsed : Visibility.Visible;
+
     private CancellationTokenSource? _debounceTimer;
 
     public MainWindow()
@@ -89,9 +92,50 @@ public sealed partial class MainWindow : Window
 
     private void SelectCurrencyInCombo(ComboBox comboBox, string isoCode)
     {
-        var item = CurrencyMapper.SupportedCurrencies.FirstOrDefault(c => c.StartsWith(isoCode));
+        var item = CurrencyMapper.SupportedCurrencies.FirstOrDefault(c => c.IsoCode == isoCode);
         if (item != null) comboBox.SelectedItem = item;
         else comboBox.SelectedIndex = 0;
+    }
+
+    private void UpdateVisualOverlays()
+    {
+        if (FromComboBox?.SelectedItem is CurrencyItem fromItem)
+        {
+            FromClosedIso.Text = fromItem.IsoCode;
+            if (fromItem.IsEmoji)
+            {
+                FromClosedFlag.Visibility = Visibility.Collapsed;
+                FromClosedEmoji.Visibility = Visibility.Visible;
+                FromClosedEmoji.Text = fromItem.Emoji;
+                FromClosedFlag.Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri("ms-appx:///Assets/Flags/xx.svg"));
+            }
+            else
+            {
+                FromClosedFlag.Visibility = Visibility.Visible;
+                FromClosedEmoji.Visibility = Visibility.Collapsed;
+                FromClosedEmoji.Text = string.Empty;
+                FromClosedFlag.Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri(fromItem.FlagPath));
+            }
+        }
+
+        if (ToComboBox?.SelectedItem is CurrencyItem toItem)
+        {
+            ToClosedIso.Text = toItem.IsoCode;
+            if (toItem.IsEmoji)
+            {
+                ToClosedFlag.Visibility = Visibility.Collapsed;
+                ToClosedEmoji.Visibility = Visibility.Visible;
+                ToClosedEmoji.Text = toItem.Emoji;
+                ToClosedFlag.Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri("ms-appx:///Assets/Flags/xx.svg"));
+            }
+            else
+            {
+                ToClosedFlag.Visibility = Visibility.Visible;
+                ToClosedEmoji.Visibility = Visibility.Collapsed;
+                ToClosedEmoji.Text = string.Empty;
+                ToClosedFlag.Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri(toItem.FlagPath));
+            }
+        }
     }
 
     private void FromAmountTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -116,6 +160,8 @@ public sealed partial class MainWindow : Window
 
     private void OnCurrencySelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        UpdateVisualOverlays();
+
         if (_isUpdatingCombos || _isInitializing) return;
 
         _isFromActive = true;
@@ -135,6 +181,7 @@ public sealed partial class MainWindow : Window
         _isFromActive = true;
         _isSwapping = false;
 
+        UpdateVisualOverlays();
         CheckDefaultStatus();
         TriggerConversion();
     }
