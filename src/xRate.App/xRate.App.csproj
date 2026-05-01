@@ -13,22 +13,13 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
 	<DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+	<AppxPackageIdentityName>OthmanAMOR.55979B0A02F44</AppxPackageIdentityName>
+	<AppxPackagePublisher>CN=CA938298-1CC2-4C29-B546-D8367F20D6A1</AppxPackagePublisher>
+	<AppxPackageVersion>1.2.0.0</AppxPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Assets\SplashScreen.scale-200.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Square150x150Logo.scale-200.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Square44x44Logo.scale-200.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Wide310x150Logo.scale-200.png">
+    <Content Include="Assets\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -52,14 +43,6 @@
   <ItemGroup>
     <ProjectReference Include="..\xRate.Core\xRate.Core.csproj" />
   </ItemGroup>
-	<ItemGroup>
-		<Content Include="Assets\**">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Assets\Flags\" />
-	</ItemGroup>
 
   <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
