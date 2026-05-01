@@ -18,7 +18,7 @@ public class CurrencyItem
     {
         get
         {
-            if (IsEmoji) return "ms-appx:///Assets/Flags/xx.svg";
+            if (IsEmoji) return "ms-appx:///Assets/Flags/xx.png";
 
             string iso = IsoCode.ToLowerInvariant();
             string countryCode = iso switch
@@ -32,7 +32,7 @@ public class CurrencyItem
                 "xpf" => "un",
                 _ => iso.Length >= 2 ? iso.Substring(0, 2) : "xx"
             };
-            return $"ms-appx:///Assets/Flags/{countryCode}.svg";
+            return $"ms-appx:///Assets/Flags/{countryCode}.png";
         }
     }
     public override string ToString() => IsoCode;

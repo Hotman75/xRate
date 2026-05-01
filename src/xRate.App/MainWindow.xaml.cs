@@ -107,14 +107,14 @@ public sealed partial class MainWindow : Window
                 FromClosedFlag.Visibility = Visibility.Collapsed;
                 FromClosedEmoji.Visibility = Visibility.Visible;
                 FromClosedEmoji.Text = fromItem.Emoji;
-                FromClosedFlag.Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri("ms-appx:///Assets/Flags/xx.svg"));
+                FromClosedFlag.Source = null;
             }
             else
             {
                 FromClosedFlag.Visibility = Visibility.Visible;
                 FromClosedEmoji.Visibility = Visibility.Collapsed;
                 FromClosedEmoji.Text = string.Empty;
-                FromClosedFlag.Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri(fromItem.FlagPath));
+                FromClosedFlag.Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(fromItem.FlagPath));
             }
         }
 
@@ -126,14 +126,14 @@ public sealed partial class MainWindow : Window
                 ToClosedFlag.Visibility = Visibility.Collapsed;
                 ToClosedEmoji.Visibility = Visibility.Visible;
                 ToClosedEmoji.Text = toItem.Emoji;
-                ToClosedFlag.Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri("ms-appx:///Assets/Flags/xx.svg"));
+                ToClosedFlag.Source = null;
             }
             else
             {
                 ToClosedFlag.Visibility = Visibility.Visible;
                 ToClosedEmoji.Visibility = Visibility.Collapsed;
                 ToClosedEmoji.Text = string.Empty;
-                ToClosedFlag.Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri(toItem.FlagPath));
+                ToClosedFlag.Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(toItem.FlagPath));
             }
         }
     }

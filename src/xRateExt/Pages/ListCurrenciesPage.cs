@@ -17,32 +17,28 @@ internal sealed partial class ListCurrenciesPage : ListPage
 
         var headerItem = new ListItem(new NoOpCommand())
         {
-            Title = "ISO",
+            Title = "Code",
             Subtitle = "Name · Symbol",
             Icon = new IconInfo("\uE946")
         };
 
-        var currencyItems = CurrencyMapper.SupportedCurrencies
-    .Select(item =>
-    {
-        string subtitle = string.IsNullOrEmpty(item.Symbol)
-            ? item.Name
-            : $"{item.Name} · {item.Symbol}";
-
-        string title = item.IsEmoji ? $"{item.Emoji} {item.IsoCode}" : item.IsoCode;
-
-        return (IListItem)new ListItem(new CopyTextCommand(item.IsoCode) { Name = "Copy ISO Code" })
+        var currencyItems = CurrencyMapper.SupportedCurrencies.Select(item =>
         {
-            Title = title,
-            Subtitle = subtitle,
-            Icon = new IconInfo("\uE825")
-        };
-    });
+            string subtitle = string.IsNullOrEmpty(item.Symbol)
+                ? item.Name
+                : $"{item.Name} · {item.Symbol}";
 
-        var allItems = new List<IListItem> { headerItem };
-        allItems.AddRange(currencyItems);
+            string title = item.IsEmoji ? $"{item.Emoji} {item.IsoCode}" : item.IsoCode;
 
-        _items = allItems.ToArray();
+            return (IListItem)new ListItem(new CopyTextCommand(item.IsoCode) { Name = "Copy ISO Code" })
+            {
+                Title = title,
+                Subtitle = subtitle,
+                Icon = new IconInfo("\uE825")
+            };
+        });
+
+        _items = new List<IListItem> { headerItem }.Concat(currencyItems).ToArray();
     }
 
     public override IListItem[] GetItems() => _items;
