@@ -132,12 +132,13 @@ internal sealed partial class xRateExtPage : DynamicListPage
                     $"1 {from} = {formattedRate} {to}",
                     new CopyTextCommand(rate.ToString("F4", CultureInfo.InvariantCulture)) { Name = "Copy Rate" },
                     "\uE825",
-                    rate > 0 ? $"1 {to} = {formattedReverseRate} {from}" : ""
+                    rate > 0 ? $"1 {to} = {formattedReverseRate} {from}" : "",
+                    targetIso: from
                 );
             }
             else
             {
-                AddSingleItem($"1 {from} = ... {to}", new NoOpCommand(), "\uE94E");
+                AddSingleItem($"1 {from} = ... {to}", new NoOpCommand(), "\uE94E", targetIso: from);
             }
 
             if (!isCacheFresh)
@@ -155,7 +156,7 @@ internal sealed partial class xRateExtPage : DynamicListPage
                 string to = string.IsNullOrWhiteSpace(toRaw) ? _settings.DefaultTo : CurrencyMapper.Normalize(toRaw);
 
                 string title = isFetching ? "..." : $"{amount} {from} to {to}";
-                AddSingleItem(title, new NoOpCommand(), "\uE94E");
+                AddSingleItem(title, new NoOpCommand(), "\uE94E", targetIso: to);
             }
             else
             {
@@ -189,32 +190,62 @@ internal sealed partial class xRateExtPage : DynamicListPage
             $"{formattedResult} {to}",
             new CopyTextCommand(finalValue.ToString("F2", CultureInfo.InvariantCulture)) { Name = "Copy Result" },
             "\uE94E",
-            $"{formattedAmount} {from} = {formattedResult} {to}"
+            $"{formattedAmount} {from} = {formattedResult} {to}",
+            targetIso: to
         );
 
         AddSingleItem(
             $"1 {from} = {formattedRate} {to}",
             new CopyTextCommand(rate.ToString("F4", CultureInfo.InvariantCulture)) { Name = "Copy Rate" },
             "\uE825",
-            rate > 0 ? $"1 {to} = {formattedReverseRate} {from}" : ""
+            rate > 0 ? $"1 {to} = {formattedReverseRate} {from}" : "",
+            targetIso: from
         );
 
         RaiseItemsChanged(_items.Count);
     }
 
-    private void AddSingleItem(string title, ICommand cmd, string iconGlyph, string subtitle = "")
+    private void AddSingleItem(string title, ICommand cmd, string fallbackGlyph, string subtitle = "", string targetIso = "")
     {
+        IconInfo finalIcon = new IconInfo(fallbackGlyph);
+        string finalTitle = title;
+
+        if (!string.IsNullOrEmpty(targetIso))
+        {
+            var item = CurrencyMapper.SupportedCurrencies.FirstOrDefault(c =>
+                string.Equals(c.IsoCode, targetIso, StringComparison.OrdinalIgnoreCase));
+
+            if (item != null)
+            {
+                if (item.IsEmoji)
+                {
+                    finalTitle = $"{item.Emoji} {title}";
+                }
+                else
+                {
+                    string fileName = item.FlagPath.Split('/').Last();
+                    string relativePath = $"Assets\\Flags\\{fileName}";
+                    string fullPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativePath);
+
+                    if (System.IO.File.Exists(fullPath))
+                    {
+                        finalIcon = IconHelpers.FromRelativePath(relativePath);
+                    }
+                }
+            }
+        }
+
         var moreCommands = new IContextItem[] {
-            new CommandContextItem(_currenciesPage),
-            new CommandContextItem(_settingsPage),
-            new CommandContextItem(_launchCommand)
-        };
+        new CommandContextItem(_currenciesPage),
+        new CommandContextItem(_settingsPage),
+        new CommandContextItem(_launchCommand)
+    };
 
         _items.Add(new ListItem(cmd)
         {
-            Title = title,
+            Title = finalTitle,
             Subtitle = subtitle,
-            Icon = new IconInfo(iconGlyph),
+            Icon = finalIcon,
             MoreCommands = moreCommands
         });
     }

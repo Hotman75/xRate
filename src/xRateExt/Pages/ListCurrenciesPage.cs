@@ -23,18 +23,21 @@ internal sealed partial class ListCurrenciesPage : ListPage
         };
 
         var currencyItems = CurrencyMapper.SupportedCurrencies
-            .Select(item =>
-            {
-                string subtitle = string.IsNullOrEmpty(item.Symbol)
-                    ? item.Name
-                    : $"{item.Name} · {item.Symbol}";
+    .Select(item =>
+    {
+        string subtitle = string.IsNullOrEmpty(item.Symbol)
+            ? item.Name
+            : $"{item.Name} · {item.Symbol}";
 
-                return (IListItem)new ListItem(new CopyTextCommand(item.IsoCode) { Name = "Copy ISO Code" })
-                {
-                    Title = item.IsoCode,
-                    Subtitle = subtitle
-                };
-            });
+        string title = item.IsEmoji ? $"{item.Emoji} {item.IsoCode}" : item.IsoCode;
+
+        return (IListItem)new ListItem(new CopyTextCommand(item.IsoCode) { Name = "Copy ISO Code" })
+        {
+            Title = title,
+            Subtitle = subtitle,
+            Icon = new IconInfo("\uE825")
+        };
+    });
 
         var allItems = new List<IListItem> { headerItem };
         allItems.AddRange(currencyItems);
