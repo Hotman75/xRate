@@ -18,7 +18,7 @@
 	<Properties>
 		<DisplayName>xRate - Command Palette Extension</DisplayName>
 		<PublisherDisplayName>Othman AMOR</PublisherDisplayName>
-		<Logo>Assets\Square150x150Logo.png</Logo>
+		<Logo>Assets\StoreLogo.png</Logo>
 	</Properties>
 
 	<Dependencies>

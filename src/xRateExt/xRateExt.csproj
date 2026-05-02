@@ -53,7 +53,6 @@
 
 	<PropertyGroup>
 		<HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
-		<AppxPackage>true</AppxPackage>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -63,10 +62,8 @@
 		<WarningsNotAsErrors>IL2081;$(WarningsNotAsErrors)</WarningsNotAsErrors>
 		<ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
 		<DefaultLanguage>en</DefaultLanguage>
-		<GenerateTemporaryStoreCertificate>True</GenerateTemporaryStoreCertificate>
 		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-		<PackageCertificateThumbprint>0B31A6D17E7B531167A586D45CEB026816CCF6C2</PackageCertificateThumbprint>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
 		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
