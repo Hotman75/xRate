@@ -11,7 +11,7 @@
 	<Identity
 	  Name="OthmanAMOR.xRate-CommandPaletteExtension"
 	  Publisher="CN=CA938298-1CC2-4C29-B546-D8367F20D6A1"
-	  Version="1.0.1.0" />
+	  Version="1.0.2.0" />
 
 	<mp:PhoneIdentity PhoneProductId="277a8c52-34b3-4323-bb7e-6dcacf6d0863" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -22,7 +22,6 @@
 	</Properties>
 
 	<Dependencies>
-		<TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
 		<TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
 	</Dependencies>
 
@@ -32,7 +31,7 @@
 
 	<Applications>
 		<Application Id="App"
-		  Executable="$targetnametoken$.exe"
+		  Executable="xRateExt.exe"
 		  EntryPoint="$targetentrypoint$">
 			<uap:VisualElements
 			  DisplayName="xRate - Command Palette Extension"

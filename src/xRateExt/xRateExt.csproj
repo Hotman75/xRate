@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
+		<AssemblyName>xRateExt</AssemblyName>
 		<RootNamespace>xRateExt</RootNamespace>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<WindowsSdkPackageVersion>10.0.26100.69</WindowsSdkPackageVersion>
@@ -20,7 +21,7 @@
 		<WindowsPackageType>MSIX</WindowsPackageType>
 		<AppxPackageIdentityName>OthmanAMOR.xRate-CommandPaletteExtension</AppxPackageIdentityName>
 		<AppxPackagePublisher>CN=CA938298-1CC2-4C29-B546-D8367F20D6A1</AppxPackagePublisher>
-		<AppxPackageVersion>1.0.1.0</AppxPackageVersion>
+		<AppxPackageVersion>1.0.2.0</AppxPackageVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
